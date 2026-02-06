@@ -1,0 +1,32 @@
+# Core
+python>=3.9
+
+# PyTorch
+torch
+torchvision
+torchaudio
+
+# Hugging Face ecosystem
+transformers
+datasets
+huggingface_hub
+accelerate
+
+# Utilities
+tqdm
+numpy
+pandas
+scipy
+
+# Plotting / visualization
+matplotlib
+
+# Tokenization & regex helpers
+regex
+
+# Optional but commonly required for HF models
+sentencepiece
+protobuf
+
+# For JSON / file handling (usually stdlib, but kept explicit)
+jsonlines

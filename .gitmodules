@@ -1,0 +1,3 @@
+[submodule "submodules/llada"]
+	path = submodules/llada
+	url = https://github.com/ML-GSAI/LLaDA.git
