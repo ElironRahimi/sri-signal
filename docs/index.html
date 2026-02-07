@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Project page for Step-Wise Refusal Dynamics and the SRI signal." />
+  <title>Step-Wise Refusal Dynamics</title>
+
+  <style>
+    :root {
+      --bg: #0b1020;
+      --panel: rgba(255, 255, 255, 0.06);
+      --panel2: rgba(255, 255, 255, 0.04);
+      --text: rgba(255, 255, 255, 0.92);
+      --muted: rgba(255, 255, 255, 0.70);
+      --muted2: rgba(255, 255, 255, 0.55);
+      --border: rgba(255, 255, 255, 0.14);
+      --link: #a9c8ff;
+      --accent: #7cdbff;
+      --shadow: 0 18px 60px rgba(0, 0, 0, 0.35);
+      --radius: 18px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: var(--sans);
+      color: var(--text);
+      background:
+        radial-gradient(1200px 600px at 20% 0%, rgba(124, 219, 255, 0.16), transparent 60%),
+        radial-gradient(900px 500px at 90% 20%, rgba(169, 200, 255, 0.14), transparent 60%),
+        radial-gradient(900px 500px at 40% 100%, rgba(124, 219, 255, 0.10), transparent 55%),
+        var(--bg);
+      line-height: 1.55;
+    }
+
+    a {
+      color: var(--link);
+      text-decoration: none;
+    }
+    a:hover { text-decoration: underline; }
+
+    .wrap {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 40px 18px 70px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .hero {
+      padding: 34px 28px 22px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: clamp(26px, 3.2vw, 40px);
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+    }
+
+    .authors {
+      margin: 0 0 10px;
+      color: var(--muted);
+      font-size: 15.5px;
+    }
+
+    .affils {
+      margin: 10px 0 0;
+      color: var(--muted2);
+      font-size: 14px;
+    }
+
+    .labrow {
+      margin-top: 12px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+      opacity: 0.95;
+    }
+
+    .labrow img {
+      height: 80px;
+      width: auto;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.03);
+      padding: 6px 8px;
+    }
+
+    .labrow img:hover {
+      transform: translateY(-1px);
+      transition: transform 120ms ease;
+    }
+
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.03);
+      color: var(--text);
+      font-size: 14px;
+    }
+
+    .pill strong { font-weight: 650; }
+
+    .content {
+      padding: 0 28px 30px;
+    }
+
+    .section {
+      padding: 22px 0;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+
+    h2 {
+      margin: 0 0 10px;
+      font-size: 18px;
+      letter-spacing: -0.01em;
+    }
+
+    p { margin: 0 0 10px; color: var(--muted); }
+
+    ul {
+      margin: 10px 0 0;
+      padding-left: 18px;
+      color: var(--muted);
+    }
+
+    li { margin: 6px 0; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    @media (min-width: 860px) {
+      .grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    .mini {
+      padding: 14px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: var(--panel2);
+    }
+
+    pre {
+      margin: 10px 0 0;
+      padding: 14px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.28);
+      overflow-x: auto;
+      font-family: var(--mono);
+      font-size: 12.5px;
+      color: rgba(255,255,255,0.85);
+    }
+
+    code { font-family: var(--mono); }
+
+    .footer {
+      padding: 16px 28px 26px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      color: var(--muted2);
+      font-size: 13px;
+    }
+
+    .note {
+      margin-top: 10px;
+      font-size: 13px;
+      color: var(--muted2);
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="hero">
+        <h1>Step-Wise Refusal Dynamics in Autoregressive and Diffusion Language Models</h1>
+
+        <div class="authors">
+          Eliron Rahimi<sup>1,2</sup>, Elad Hirshel<sup>3</sup>, Rom Himelstein<sup>1</sup>, Amit LeVi<sup>1</sup>, Avi Mendelson<sup>1</sup>, Chaim Baskin<sup>2</sup>
+        </div>
+
+        <div class="affils">
+          <div><sup>1</sup> Department of Computer Science, Technion – Israel Institute of Technology</div>
+          <div><sup>2</sup> INSIGHT Lab, School of Electrical and Computer Engineering, Ben-Gurion University of the Negev, Israel</div>
+          <div><sup>3</sup> Computer Science Department, University of Haifa, Haifa, Israel</div>
+        </div>
+
+        <div class="labrow" aria-label="Lab logos">
+          <img src="assets/tech_lab.png" alt="Technion lab" />
+          <img src="assets/bgu_lab.png" alt="BGU lab" />
+        </div>
+
+        <div class="links">
+          <a class="pill" href="https://www.arxiv.org/abs/2602.02600" target="_blank" rel="noreferrer"><strong>Paper</strong> (arXiv:2602.02600)</a>
+          <a class="pill" href="https://github.com/ElironRahimi/sri-signal" target="_blank" rel="noreferrer"><strong>Code</strong> (GitHub)</a>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="section">
+          <h2>About</h2>
+          <p>
+            This repository provides code for generating and visualizing Step-Wise Refusal Internal Dynamics (SRI) signals from language models.
+          </p>
+          <p>
+            SRI is a step-wise internal representation that tracks how refusal-related internal states evolve during text generation. The framework supports analysis of internal generation activations across both autoregressive and diffusion-based language model architectures.
+          </p>
+          <p>
+            This repository focuses on step-wise internal signals that capture the evolution of refusal alignment throughout the generation process.
+          </p>
+          <p>
+            Unlike output-level refusal detection, SRI operates on internal model representations extracted at each generation step, enabling fine-grained inspection of refusal formation, stability, recovery, and transitions during generation.
+          </p>
+          <p>
+            The framework is model-agnostic and intended for research in model safety, alignment, and interpretability.
+          </p>
+
+          <div style="margin-top: 14px;">
+            <img src="assets/example.png" alt="SRI example" style="display: block; margin: 0 auto; width: 100%; max-width: 560px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.12); background: rgba(0,0,0,0.20);" />
+          </div>
+        </div>
+
+        
+
+        <div class="section">
+          <div class="grid">
+            <div class="mini">
+              <h2>Overview</h2>
+              <p>
+                This project introduces a step-wise internal perspective on refusal behavior in both autoregressive (AR) and diffusion language models (DLMs). We show that refusal and safety outcomes depend not only on learned representations, but also strongly on the sampling dynamics used at inference time.
+              </p>
+            </div>
+
+            <div class="mini">
+              <h2>Key Contributions</h2>
+              <ul>
+                <li>A step-wise analytical framework for comparing refusal dynamics between AR and diffusion decoding.</li>
+                <li>The Step-Wise Refusal Internal Dynamics (SRI) signal for interpretability and safety.</li>
+                <li>Evidence that harmful generations exhibit incomplete internal recovery, even when text-level refusal does not trigger.</li>
+                <li>A lightweight inference-time detector (SRI Guard) that generalizes to unseen attacks with &gt;100× lower inference overhead.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        
+
+        <div class="section">
+          <h2>Quick Start</h2>
+          <p>This section is intentionally minimal. A full reproducibility guide will be added soon.</p>
+          <pre><code>git clone https://github.com/ElironRahimi/sri-signal
+cd sri-signal</code></pre>
+        </div>
+
+        <div class="section">
+          <h2>Citation</h2>
+          <pre><code>@article{rahimi2026step,
+  title={Step-Wise Refusal Dynamics in Autoregressive and Diffusion Language Models},
+  author={Rahimi, Eliron and Hirshel, Elad and Himelstein, Rom and LeVi, Amit and Mendelson, Avi and Baskin, Chaim},
+  journal={arXiv preprint arXiv:2602.02600},
+  year={2026}
+}</code></pre>
+        </div>
+
+        <div class="section">
+          <h2>Contact</h2>
+          <p>Eliron Rahimi — <a href="mailto:elironrahimi@campus.technion.ac.il">elironrahimi@campus.technion.ac.il</a></p>
+        </div>
+      </div>
+
+      <div class="footer">
+        © 2026 · Project page for SRI Signal and step-wise refusal dynamics.
+      </div>
+    </div>
+  </div>
+</body>
+</html>
