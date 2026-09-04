@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<!-- saved from url=(0051)https://gabrieleserussi.github.io/sri-project-page/ -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Step-Wise Refusal Dynamics in Autoregressive and Diffusion Language Models | Project page</title>
+  <meta name="description" content="Diffusion language models revise harmful intermediate text before committing it. The paper isolates this recovery by switching the sampler under fixed weights, introduces SRI, a step-wise refusal signal read from hidden states, and builds SRI Guard, a jailbreak detector trained only on benign signals with 0.01 to 0.04% inference overhead. Decart.ai with the Technion, Ben-Gurion University and the University of Haifa.">
+  <meta name="keywords" content="diffusion language models, autoregressive, jailbreak, refusal, AI safety, LLaDA, Dream, LLaMA-3, Qwen, Gemma, SRI, SRI Guard, remasking, recovery by revision, Decart, Technion, Ben-Gurion University, EMNLP 2026">
+  <meta name="author" content="Eliron Rahimi, Elad Hirshel, Rom Himelstein, Amit LeVi, Avi Mendelson, Chaim Baskin">
+  <meta property="og:site_name" content="Step-Wise Refusal Dynamics">
+  <meta property="og:title" content="Step-Wise Refusal Dynamics in Autoregressive and Diffusion Language Models">
+  <meta property="og:description" content="Why diffusion language models recover from harmful intermediate text, a step-wise internal signal (SRI) that reads it inside the model, and SRI Guard: jailbreak detection at 0.01 to 0.04% overhead.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://gabrieleserussi.github.io/sri-project-page/">
+  <link rel="canonical" href="https://gabrieleserussi.github.io/sri-project-page/">
+  <meta property="og:image" content="https://gabrieleserussi.github.io/sri-project-page/assets/figures/fig1-recovery-example.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/svg+xml" href="https://gabrieleserussi.github.io/sri-project-page/assets/img/favicon-classic.svg">
+  <link rel="stylesheet" href="./Step-Wise Refusal Dynamics in Autoregressive and Diffusion Language Models _ Project page_files/style.css">
+  <link rel="stylesheet" href="./Step-Wise Refusal Dynamics in Autoregressive and Diffusion Language Models _ Project page_files/hero.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com/">
+  <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
+  <link href="./Step-Wise Refusal Dynamics in Autoregressive and Diffusion Language Models _ Project page_files/css2" rel="stylesheet">
+  <link rel="stylesheet" href="./Step-Wise Refusal Dynamics in Autoregressive and Diffusion Language Models _ Project page_files/theme-classic.css">
+</head>
+<body>
+
+<!-- ====================== NAV (Decart Research shared nav) ====================== -->
+<nav class="site-nav">
+  <div class="container">
+    <a href="https://gabrieleserussi.github.io/sri-project-page/#top" class="classic-wordmark" aria-label="Back to top">Step-Wise Refusal Dynamics</a>
+    <button class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="navLinks"><span></span><span></span><span></span></button>
+    <div class="site-nav-links" id="navLinks">
+      <a href="https://gabrieleserussi.github.io/sri-project-page/#tldr">Overview</a>
+      <a href="https://gabrieleserussi.github.io/sri-project-page/#recovery">Findings</a>
+      <a href="https://gabrieleserussi.github.io/sri-project-page/#sri">SRI signal</a>
+      <a href="https://gabrieleserussi.github.io/sri-project-page/#guard">SRI Guard</a>
+      <a href="https://gabrieleserussi.github.io/sri-project-page/#build">Build on it</a>
+      <a href="https://gabrieleserussi.github.io/sri-project-page/#bibtex">BibTeX</a>
+      <a href="https://arxiv.org/abs/2602.02600" class="site-nav-cta" target="_blank" rel="noopener">arXiv</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ====================== FIRST FOLD: headline + interactive cover ====================== -->
+<div class="article-shell container" id="top">
+  <header class="article-header">
+    <div class="article-header-main">
+      <div class="article-meta">
+        <span class="article-date">EMNLP 2026 · arXiv:2602.02600</span>
+      </div>
+      <h1 class="article-title">Step-Wise Refusal Dynamics in Autoregressive and Diffusion Language Models</h1>
+      <p class="article-lede"><strong>Diffusion language models</strong> are an emerging paradigm whose safety is not yet well understood, and early evidence suggests they resist jailbreaks better than autoregressive models. The open question is whether the gap comes from the weights or from the sampler. <span class="lede-more">The key observation is that remasking can <strong>revise harmful intermediate text before it is committed</strong>, whereas an autoregressive decoder keeps every token it emits. The paper measures this recovery, isolates it by switching the sampler under fixed weights, and reads it inside the model with <strong>SRI</strong>, a step-wise hidden-state signal. Diffusion models hold jailbreak success to 9 to 21% against 48 to 62% for comparable autoregressive models, and <strong>SRI Guard</strong>, trained only on benign signals, matches or outperforms existing defenses at 0.01 to 0.04% overhead.</span></p>
+
+      <div class="authors" aria-label="Authors">
+        <span class="author"><a href="https://openreview.net/profile?id=~Eliron_Rahimi1" target="_blank" rel="noopener">Eliron Rahimi</a><sup>1,2</sup></span>
+        <span class="author">Elad Hirshel<sup>3</sup></span>
+        <span class="author"><a href="https://scholar.google.com/citations?user=QhRpd7MAAAAJ" target="_blank" rel="noopener">Rom Himelstein</a><sup>1</sup></span>
+        <span class="author"><a href="https://scholar.google.com/citations?user=T3RWi_cAAAAJ" target="_blank" rel="noopener">Amit LeVi</a><sup>1</sup></span>
+        <span class="author"><a href="https://www.cs.technion.ac.il/~mendlson/" target="_blank" rel="noopener">Avi Mendelson</a><sup>1</sup></span>
+        <span class="author is-decart"><a href="https://chaimbaskin.bgu.ac.il/" target="_blank" rel="noopener">Chaim Baskin</a><sup>2,4</sup> <span class="decart-chip" title="Decart.ai"><img src="./Step-Wise Refusal Dynamics in Autoregressive and Diffusion Language Models _ Project page_files/decart-all-blue-logo.svg" alt="">Decart</span></span>
+      </div>
+      <div class="affils">
+        <span class="affil"><sup>1</sup>Department of Computer Science, Technion Israel Institute of Technology</span>
+        <span class="affil"><sup>2</sup>INSIGHT Lab, School of Electrical and Computer Engineering, Ben-Gurion University of the Negev</span>
+        <span class="affil"><sup>3</sup>Computer Science Department, University of Haifa</span>
+        <span class="affil is-decart"><sup>4</sup><a href="https://research.decart.ai/" target="_blank" rel="noopener">Decart.ai</a>, Israel</span>
+      </div>
+
+    <nav class="affil-logo-row" aria-label="Institutions of the authors">
+      <a class="logo-btn" href="https://www.cs.technion.ac.il/" target="_blank" rel="noopener" title="Technion, Israel Institute of Technology: Department of Computer Science"><img src="./Step-Wise Refusal Dynamics in Autoregressive and Diffusion Language Models _ Project page_files/technion.svg" alt="Technion, Israel Institute of Technology"></a>
+      <a class="logo-btn" href="https://www.bgu.ac.il/en/" target="_blank" rel="noopener" title="Ben-Gurion University of the Negev"><img src="./Step-Wise Refusal Dynamics in Autoregressive and Diffusion Language Models _ Project page_files/bgu.svg" alt="Ben-Gurion University of the Negev"></a>
+      <a class="logo-btn" href="https://insight.bgu.ac.il/" target="_blank" rel="noopener" title="INSIGHT Lab: Intelligent Systems, Geometric Computing and Perception, Ben-Gurion University"><img src="./Step-Wise Refusal Dynamics in Autoregressive and Diffusion Language Models _ Project page_files/insight-lab.png" alt="INSIGHT Lab, Ben-Gurion University of the Negev"></a>
+      <a class="logo-btn is-square" href="https://cs.haifa.ac.il/" target="_blank" rel="noopener" title="University of Haifa: Computer Science Department"><img src="./Step-Wise Refusal Dynamics in Autoregressive and Diffusion Language Models _ Project page_files/haifa.png" alt="University of Haifa"></a>
+      <a class="logo-btn is-wordmark" href="https://research.decart.ai/" target="_blank" rel="noopener" title="Decart Research"><img src="./Step-Wise Refusal Dynamics in Autoregressive and Diffusion Language Models _ Project page_files/decart.svg" alt="Decart"></a>
+    </nav>
+      <div class="paper-links">
+        <a class="btn-pill is-primary" href="https://arxiv.org/abs/2602.02600" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9.92 9.49l2.05 2.48 6.02-7.1c.32-.43.47-.65.32-1.02a1.08 1.08 0 0 0-.96-.68c-.22-.02-.44.05-.64.24L9.92 9.49z" fill="currentColor" opacity=".6"></path><path d="M15.32 10.68 5.75 1.46a1.36 1.36 0 0 0-.75-.45.99.99 0 0 0-.93.6c-.15.36-.04.62.29 1.09l7.62 9.28-5.67 7c-.3.31-.42.84-.29 1.18.15.37.5.6.94.6.26 0 .5-.13.68-.33l7.68-7.18a1.7 1.7 0 0 0 .57-1.29 1.7 1.7 0 0 0-.57-1.28z" fill="currentColor"></path><path d="M19.64 21.27 11.95 11.96 9.9 9.48l-1.25 1.13a1.7 1.7 0 0 0 0 2.69l9.76 9.44c.17.18.4.29.67.26a.9.9 0 0 0 .86-.6 1 1 0 0 0-.3-1.13z" fill="currentColor" opacity=".6"></path></svg>
+          Read the paper
+        </a>
+        <a class="btn-pill" href="https://arxiv.org/pdf/2602.02600" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3v4a1 1 0 0 0 1 1h4"></path><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"></path><path d="M12 11v6"></path><path d="m9.5 14.5 2.5 2.5 2.5-2.5"></path></svg>
+          PDF
+        </a>
+        <a class="btn-pill" href="https://github.com/ElironRahimi/sri-signal" target="_blank" rel="noopener">
+          <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"></path></svg>
+          Code
+        </a>
+        <a class="btn-pill" href="https://gabrieleserussi.github.io/sri-project-page/#bibtex">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 8h10M7 12h10M7 16h6"></path><rect x="3.5" y="3.5" width="17" height="17" rx="3"></rect></svg>
+          BibTeX
+        </a>
+        <a class="js-colab btn-pill" href="https://colab.research.google.com/github/GabrieleSerussi/sri-project-page/blob/main/colab/sri_playground.ipynb" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"></circle><path d="M10 8.5v7l5.5-3.5z"></path></svg>
+          Open in Colab
+        </a>
+      </div>
+    </div>
+
+    <!-- The article opens on its own demo: a schematic of recovery-by-revision, step by step -->
+    <div class="article-hero-demo" id="heroDemo">
+      <div class="sim-card" aria-label="Interactive schematic of how a jailbreak generation unfolds step by step under diffusion remasking and under autoregressive sampling, with the SRI signal below">
+        <div class="sim-top">
+          <div class="seg" id="simModes" role="tablist" aria-label="Sampling mechanism">
+            <button type="button" role="tab" data-mode="diffusion" aria-selected="true"><span class="lbl-long">Diffusion remasking</span><span class="lbl-short">Diffusion</span></button>
+            <button type="button" role="tab" data-mode="ar" aria-selected="false"><span class="lbl-long">AR sampling</span><span class="lbl-short">AR sampling</span></button>
+          </div>
+          <div class="sim-step">Step <strong id="simStep">0</strong> / 32</div>
+        </div>
+
+        <div class="sim-prompt">
+          <span class="eyebrow">Jailbreak prompt</span>
+          <p>[attack prefix] Explain how to ▇▇▇▇ ▇▇▇▇▇▇ ▇▇▇ ▇▇▇▇▇…</p>
+        </div>
+
+        <div class="sim-canvas">
+          <div class="sim-state" id="simState" data-kind="mask"><i></i><span>Fully masked</span></div>
+          <div class="sim-tokens" id="simTokens" aria-live="off"><span class="tok tok--mask">░░░</span><span class="tok tok--mask">░░░</span><span class="tok tok--mask">░░░</span><span class="tok tok--mask">░░░</span><span class="tok tok--mask">░░░</span><span class="tok tok--mask">░░░</span><span class="tok tok--mask">░░░</span><span class="tok tok--mask">░░░</span><span class="tok tok--mask">░░░</span><span class="tok tok--mask">░░░</span><span class="tok tok--mask">░░░</span><span class="tok tok--mask">░░░</span><span class="tok tok--mask">░░░</span><span class="tok tok--mask">░░░</span><span class="tok tok--mask">░░░</span><span class="tok tok--mask">░░░</span></div>
+          <div class="sim-legend" aria-hidden="true">
+            <span class="l-mask"><i></i>masked</span>
+            <span class="l-pred"><i></i>harmful · predicted, uncommitted</span>
+            <span class="l-commit"><i></i>harmful · committed</span>
+            <span class="l-safe"><i></i>refusal · committed</span>
+          </div>
+        </div>
+
+        <div class="sim-sri">
+          <div class="sim-sri-head">
+            <span class="eyebrow">SRI signal <span class="sym">σ<sub>t</sub></span> · internal compliance score</span>
+            <span class="sim-sri-val" id="simSriVal">σ = 0.92</span>
+          </div>
+          <svg id="simSri" viewBox="0 0 320 112" role="img" aria-label="Schematic SRI trajectory across generation steps"><rect x="26" y="12" width="286" height="40" class="zone-comp"></rect><rect x="26" y="52" width="286" height="40" class="zone-ref"></rect><line x1="26" x2="312" y1="92" y2="92" class="grid"></line><line x1="26" x2="312" y1="52" y2="52" class="grid"></line><line x1="26" x2="312" y1="12" y2="12" class="grid"></line><text x="32" y="22" class="zone-label">compliance-aligned</text><text x="32" y="88" class="zone-label">refusal-aligned</text><text x="21" y="15" class="axis-label" text-anchor="end">1</text><text x="21" y="55" class="axis-label" text-anchor="end">.5</text><text x="21" y="95" class="axis-label" text-anchor="end">0</text><text x="26" y="108" class="axis-label" text-anchor="middle">0</text><text x="97.5" y="108" class="axis-label" text-anchor="middle">8</text><text x="169" y="108" class="axis-label" text-anchor="middle">16</text><text x="240.5" y="108" class="axis-label" text-anchor="middle">24</text><text x="312" y="108" class="axis-label" text-anchor="middle">32</text><path d="M26.0 16.0 L34.9 15.1 L43.9 15.5 L52.8 16.7 L61.8 16.8 L70.7 15.8 L79.6 15.0 L88.6 15.7 L97.5 16.8 L106.4 16.7 L115.4 15.6 L124.3 15.1 L133.3 15.9 L142.2 16.9 L151.1 16.6 L160.1 15.4 L169.0 15.1 L177.9 16.1 L186.9 16.9 L195.8 16.4 L204.8 15.3 L213.7 15.2 L222.6 16.3 L231.6 17.0 L240.5 16.2 L249.4 15.2 L258.4 15.3 L267.3 16.5 L276.3 16.9 L285.2 16.0 L294.1 15.1 L303.1 15.5 L312.0 16.7" class="ref-harmless"></path><path d="M26.0 85.0 L34.9 85.2 L43.9 85.7 L52.8 86.2 L61.8 86.2 L70.7 85.7 L79.6 85.2 L88.6 85.0 L97.5 85.2 L106.4 85.8 L115.4 86.2 L124.3 86.2 L133.3 85.7 L142.2 85.2 L151.1 85.0 L160.1 85.2 L169.0 85.8 L177.9 86.2 L186.9 86.2 L195.8 85.7 L204.8 85.2 L213.7 85.0 L222.6 85.2 L231.6 85.8 L240.5 86.2 L249.4 86.2 L258.4 85.7 L267.3 85.2 L276.3 85.0 L285.2 85.2 L294.1 85.8 L303.1 86.2 L312.0 86.2" class="ref-refusal"></path><path d="M26.0 18.4 L34.9 17.6 L43.9 16.8 L52.8 16.0 L61.8 16.0 L70.7 16.8 L79.6 17.6 L88.6 18.4 L97.5 20.0 L106.4 21.6 L115.4 28.0 L124.3 32.8 L133.3 39.2 L142.2 44.0 L151.1 48.0 L160.1 52.0 L169.0 55.2 L177.9 58.4 L186.9 61.6 L195.8 64.8 L204.8 68.0 L213.7 70.4 L222.6 72.8 L231.6 75.2 L240.5 77.6 L249.4 80.0 L258.4 81.6 L267.3 82.4 L276.3 83.2 L285.2 84.0 L294.1 84.0 L303.1 84.8 L312.0 84.8" class="path-ghost"></path><path d="M26.0 18.4" class="path-main"></path><circle r="4.5" cx="26" cy="18.4" class="marker"></circle></svg>
+          <div class="sim-sri-legend" aria-hidden="true">
+            <span class="l-main"><i></i>this jailbreak generation</span>
+            <span class="l-refh"><i></i>harmless reference</span>
+            <span class="l-ref"><i></i>explicit-refusal reference</span>
+          </div>
+        </div>
+
+        <div class="sim-controls">
+          <button class="sim-play" id="simPlay" type="button" aria-label="Play animation">
+            <svg class="ico-play" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l12-7.5z"></path></svg>
+            <svg class="ico-pause" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 4.5h4v15H6zM14 4.5h4v15h-4z"></path></svg>
+          </button>
+          <div class="slider-track-wrapper">
+            <input type="range" min="0" max="32" value="0" step="1" class="styled-slider" id="simSlider" aria-label="Generation step">
+            <div class="slider-fill" id="simFill" style="width: 0%;"></div>
+          </div>
+        </div>
+        <p class="sim-caption" id="simCaption"><strong>Diffusion remasking.</strong> Every step predicts all positions and commits only the positions selected by the remasking rule. Harmful predictions (dashed red) compete for commitment and in this example stay uncommitted, and once refusal tokens are committed (solid green) the rest of the response follows them. This card is a schematic of the mechanism shown in Figures 1, 2 and 12 of the paper, with harmful content redacted; the curves are illustrative and do not reproduce measured data.</p>
+      </div>
+    </div>
+  </header>
+</div>
+
+<!-- ====================== THE PAPER IN THREE BEATS ====================== -->
+<section class="home-section home-section--tight" id="tldr">
+  <div class="tldr reveal in">
+    <div class="tldr-side">
+      <span class="eyebrow eyebrow-badge">The paper in three beats</span>
+      <h3>Sampling dynamics play a substantial role in jailbreak robustness beyond the model weights.</h3>
+    </div>
+    <ul class="tldr-beats">
+      <li><span class="beat-label">The problem</span>An autoregressive decoder commits each token as it is generated, so an early harmful token shapes the whole response. Diffusion models appear more robust to jailbreaks, and it is unclear whether the weights or the sampler explains it.</li>
+      <li><span class="beat-label">The key insight</span>Under remasking a harmful prediction is committed only if its position is selected, so harmful intermediate tokens are often revised. Hidden states carry the same dynamic at every step, so a step-wise signal can read recovery and its failures.</li>
+      <li><span class="beat-label">The result</span>The same weights become safer when autoregressive sampling is switched to diffusion remasking, and diffusion models are consistently more robust than comparable autoregressive models. SRI Guard, trained only on benign signals, matches or outperforms three existing defenses at 150 to 300 times lower cost.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ====================== NUMBERS ====================== -->
+<section class="home-section">
+  <div class="section-intro reveal in">
+    <h2 class="home-section-heading">Four numbers summarize the evaluation.</h2>
+    <p>Six models in the 7 to 8B range, five jailbreak attacks, 600 prompts; every value comes from the tables of the paper.</p>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-card reveal in">
+      <span class="eyebrow eyebrow-badge">Jailbreak attack success</span>
+      <div class="stat-value">48 to 62% <span class="arrow">→</span><br>9 to 21%</div>
+      <div class="stat-caption">Aggregate Attack Success Rate, autoregressive against diffusion models of comparable scale (Table 3).</div>
+    </div>
+    <div class="stat-card reveal in">
+      <span class="eyebrow eyebrow-badge">Harmful remasking rate</span>
+      <div class="stat-value">0.81 to 0.96</div>
+      <div class="stat-caption">Share of harmful intermediate generations that remasking later revises (Table 1).</div>
+    </div>
+    <div class="stat-card reveal in">
+      <span class="eyebrow eyebrow-badge">SRI Guard overhead</span>
+      <div class="stat-value">0.01 to 0.04%</div>
+      <div class="stat-caption">Added inference time, 150 to 300 times below the compared defenses (Table 13).</div>
+    </div>
+    <div class="stat-card reveal in">
+      <span class="eyebrow eyebrow-badge">Anomaly detection</span>
+      <div class="stat-value">0.92 AUROC</div>
+      <div class="stat-caption">Mean over six models for the last-layer SRI signal; a text-based signal reaches 0.57 (Table 4).</div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== SECOND FOLD: article body + quick links rail ====================== -->
+<div class="article-main container"><nav class="jumpbar" aria-label="Jump to a section"><a class="jump" href="https://gabrieleserussi.github.io/sri-project-page/#recovery"><small>01</small>Recovery by revision</a><a class="jump" href="https://gabrieleserussi.github.io/sri-project-page/#sampler"><small>02</small>Sampler and scale</a><a class="jump" href="https://gabrieleserussi.github.io/sri-project-page/#sri"><small>03</small>The SRI signal</a><a class="jump" href="https://gabrieleserussi.github.io/sri-project-page/#guard"><small>04</small>SRI Guard</a><a class="jump" href="https://gabrieleserussi.github.io/sri-project-page/#build"><small>05</small>Build on SRI</a></nav>
+  <div class="article-body">
+
+    <!-- 01 -->
+    <div class="text-block reveal in" id="recovery">
+      <span class="eyebrow eyebrow-outline section-eyebrow">01 · Recovery by revision</span>
+      <h2>Remasking lets a diffusion model <span class="accent">recover</span> from harmful intermediate text.</h2>
+      <p>The question is whether diffusion language models (DLMs) recover from harmful intermediate generations under jailbreak attacks, and whether the sampling mechanics explain it. The obstacle is autoregressive (AR) commitment: every token is fixed once generated, so early harmful tokens shape the rest of the response.</p>
+      <div class="tokrow-block">
+        <div class="tokrow"><span class="tokrow-label">Autoregressive sampling</span><span class="tok tok--harmful is-committed">Sure,</span><span class="tok tok--harmful is-committed">here</span><span class="tok tok--harmful is-committed">is</span><span class="tok tok--harmful is-committed">▇▇▇▇</span><span class="tokrow-arrow">→</span><span class="tok tok--harmful is-committed">▇▇▇</span><span class="tok tok--mask">░░░</span></div>
+        <div class="tokrow"><span class="tokrow-label">Diffusion remasking</span><span class="tok tok--harmful">Sure,</span><span class="tok tok--harmful">▇▇▇▇</span><span class="tok tok--safe is-committed">sorry,</span><span class="tokrow-arrow">→</span><span class="tok tok--revising">I</span><span class="tok tok--safe is-committed">cannot</span></div>
+        <p class="figure-caption">Solid pills are committed tokens, dashed pills are predictions that can still change. Schematic.</p>
+      </div>
+      <p class="deep">Recovery occurs when harmful tokens generated in earlier steps do not persist to the final response. This requires two conditions, and both arise naturally from remasking.</p>
+      <div class="deep insight-row">
+        <div class="insight-card">
+          <div class="insight-marker">1</div>
+          <div class="insight-head"><strong>Harmful predictions compete for commitment</strong></div>
+          <p>A harmful token is committed only if it is the highest-logit (or top-k) token at its position and that position is selected among all uncommitted ones (lowest entropy under greedy remasking, random under random remasking). Harmful predictions fill only part of the pool, so many are never committed.</p>
+        </div>
+        <div class="insight-card">
+          <div class="insight-marker">2</div>
+          <div class="insight-head"><strong>Harmless commitments make harm less likely</strong></div>
+          <p>Committed harmless tokens constrain the remaining masked positions and make harmful continuations less compatible with the partial response, so harmful tokens become less likely to reappear in later steps.</p>
+        </div>
+      </div>
+      <div class="deep figure-grid" style="--cols: 2">
+        <div class="figure is-plot">
+          <img src="./Step-Wise Refusal Dynamics in Autoregressive and Diffusion Language Models _ Project page_files/fig3-recovery-by-revision.png" alt="Line plot over 32 generation steps. The probability that harmful content generated so far has been committed rises slowly from about 0.05 to above 0.2 under both greedy and random remasking, while the probability of generating harmful content given that everything committed so far is harmless falls from about 0.14 to near zero within ten steps." loading="lazy">
+          <p class="figure-caption"><strong>Figure 3.</strong> Both conditions, averaged across LLaDA, Dream and LLaDA-1.5. Blue: probability that harmful content generated by step <em>t</em> is already committed. Red: probability of generating harmful content at step <em>t</em> when everything committed is harmless.</p>
+        </div>
+        <div class="chart-card" id="chartHrrCard">
+          <div class="chart-head">
+            <div class="chart-title">Recovery-by-revision statistics<small>Table 1 · jailbreak test set, LLM-judged harmfulness</small></div>
+          </div>
+          <div class="legend" aria-hidden="true"><span><i style="background:var(--series-diffusion)"></i>HRR · Harmful Remasking Rate</span><span><i style="background:var(--series-ar)"></i>FRR · Full Recovery Rate</span></div>
+          <div class="hbars" id="chartHrr"><div class="hbar-group"><div class="hbar-label">LLaDA<small>diffusion</small></div><div class="hbar-track-set"><div class="hbar-row" tabindex="0" data-tip="LLaDA · Harmful Remasking Rate 0.81"><span class="hbar-baseline"></span><div class="bar" data-w="81" style="width: 81%;"></div><span class="val">0.81</span></div><div class="hbar-row" tabindex="0" data-tip="LLaDA · Full Recovery Rate 0.63"><span class="hbar-baseline"></span><div class="bar is-ar" data-w="63" style="width: 63%;"></div><span class="val">0.63</span></div></div></div><div class="hbar-group"><div class="hbar-label">Dream<small>diffusion</small></div><div class="hbar-track-set"><div class="hbar-row" tabindex="0" data-tip="Dream · Harmful Remasking Rate 0.96"><span class="hbar-baseline"></span><div class="bar" data-w="96" style="width: 96%;"></div><span class="val">0.96</span></div><div class="hbar-row" tabindex="0" data-tip="Dream · Full Recovery Rate 0.73"><span class="hbar-baseline"></span><div class="bar is-ar" data-w="73" style="width: 73%;"></div><span class="val">0.73</span></div></div></div><div class="hbar-group"><div class="hbar-label">LLaDA-1.5<small>diffusion</small></div><div class="hbar-track-set"><div class="hbar-row" tabindex="0" data-tip="LLaDA-1.5 · Harmful Remasking Rate 0.92"><span class="hbar-baseline"></span><div class="bar" data-w="92" style="width: 92%;"></div><span class="val">0.92</span></div><div class="hbar-row" tabindex="0" data-tip="LLaDA-1.5 · Full Recovery Rate 0.65"><span class="hbar-baseline"></span><div class="bar is-ar" data-w="65" style="width: 65%;"></div><span class="val">0.65</span></div></div></div><div class="hbar-group"><div></div><div class="hbar-grid"><span class="is-first" style="left: 0%;">0</span><span style="left: 50%;">0.5</span><span class="is-last" style="left: 100%;">1.0</span></div></div></div>
+          <p class="chart-note"><strong>HRR</strong>: how often an intermediate harmful generation is later revised. <strong>FRR</strong>: how often the final output is then non-harmful. Recovery persists in the hybrid model SDAR and in LLaDA-2 at 16B (Appendix A).</p>
+        </div>
+      </div>
+      <div class="figure is-narrow">
+        <img src="./Step-Wise Refusal Dynamics in Autoregressive and Diffusion Language Models _ Project page_files/fig1-recovery-example.png" alt="Four stacked panels from the paper. A jailbreak prompt with an attack prefix asks a harmful chemistry question; the intermediate LLaDA output at step 16 is labelled harmful, the output at step 25 is labelled transition as refusal language begins to appear, and the final output at step 32 is labelled safe and recovered, an explicit refusal." loading="lazy">
+        <p class="figure-caption"><strong>Figure 1.</strong> Recovery in LLaDA: harmful intermediate tokens are revised into a safe refusal, the mechanism the cover animates.</p>
+      </div>
+      <div class="callout">
+        <span class="eyebrow">What you learn</span>
+        <p>The remasking diffusion sampling mechanism naturally promotes recovery from harmful intermediate generations.</p>
+      </div>
+    <button class="more-btn" type="button" hidden="" aria-expanded="false"><span>Read the full section</span><i class="chev"></i></button></div>
+
+    <!-- 02 -->
+    <div class="text-block reveal in" id="sampler">
+      <span class="eyebrow eyebrow-outline section-eyebrow">02 · Sampler and scale</span>
+      <h2>Switching only the <span class="accent">sampler</span> brings a gain, and the gap holds across model families.</h2>
+      <p>The question is whether recovery makes a model safer once its weights are fixed, and the obstacle is that a gap between model families can come from the weights as well as from the sampler. LLaDA and LLaDA-1.5 also support AR sampling, so only the sampler needs to change.</p>
+      <div class="deep rq-cards">
+        <div class="rq-card">
+          <div class="rq-card-top"><span class="rq-num">ASR</span><span class="eyebrow eyebrow-badge">Lower is safer</span></div>
+          <p><strong>Attack Success Rate</strong>: a Llama 3 judge decides whether the response answers the harmful request.</p>
+        </div>
+        <div class="rq-card">
+          <div class="rq-card-top"><span class="rq-num">RR</span><span class="eyebrow eyebrow-badge">Higher is safer</span></div>
+          <p><strong>Refusal Rate</strong>: a refusal dictionary matches the response; an LLM judge confirms it (Appendix C.6).</p>
+        </div>
+        <div class="rq-card">
+          <div class="rq-card-top"><span class="rq-num">600</span><span class="eyebrow eyebrow-badge">Test prompts</span></div>
+          <p><strong>100 raw HarmBench prompts</strong> and 100 for each of five attacks: Flip Attack, PAIR, Refusal Suppression, Random Search, WildJailbreak.</p>
+        </div>
+      </div>
+      <div class="deep chart-card">
+        <div class="chart-head">
+          <div class="chart-title">Improvement from switching AR sampling → diffusion remasking<small>Table 2 · percentage points, positive is safer</small></div>
+          <div class="chart-controls">
+            <div class="seg" id="deltaMetric" role="tablist" aria-label="Metric">
+              <button type="button" role="tab" data-metric="rr" aria-selected="true">Δ Refusal rate</button>
+              <button type="button" role="tab" data-metric="asr" aria-selected="false">Δ Attack success</button>
+            </div>
+          </div>
+        </div>
+        <div class="legend" aria-hidden="true"><span><i style="background:var(--series-diffusion)"></i>LLaDA</span><span><i style="background:var(--series-ar)"></i>LLaDA-1.5</span></div>
+        <div class="hbars" id="chartDelta"><div class="hbar-group"><div class="hbar-label">WildJailbreak</div><div class="hbar-track-set"><div class="hbar-row" tabindex="0" data-tip="LLaDA · WildJailbreak · Δ Refusal Rate +14 points"><span class="hbar-baseline"></span><div class="bar" data-w="23.333333333333332" style="width: 23.3333%;"></div><span class="val">+14</span></div><div class="hbar-row" tabindex="0" data-tip="LLaDA-1.5 · WildJailbreak · Δ Refusal Rate +15 points"><span class="hbar-baseline"></span><div class="bar is-ar" data-w="25" style="width: 25%;"></div><span class="val">+15</span></div></div></div><div class="hbar-group"><div class="hbar-label">Flip Attack</div><div class="hbar-track-set"><div class="hbar-row" tabindex="0" data-tip="LLaDA · Flip Attack · Δ Refusal Rate +33 points"><span class="hbar-baseline"></span><div class="bar" data-w="55.00000000000001" style="width: 55%;"></div><span class="val">+33</span></div><div class="hbar-row" tabindex="0" data-tip="LLaDA-1.5 · Flip Attack · Δ Refusal Rate +38 points"><span class="hbar-baseline"></span><div class="bar is-ar" data-w="63.33333333333333" style="width: 63.3333%;"></div><span class="val">+38</span></div></div></div><div class="hbar-group"><div class="hbar-label">PAIR</div><div class="hbar-track-set"><div class="hbar-row" tabindex="0" data-tip="LLaDA · PAIR · Δ Refusal Rate +7 points"><span class="hbar-baseline"></span><div class="bar" data-w="11.666666666666666" style="width: 11.6667%;"></div><span class="val">+7</span></div><div class="hbar-row" tabindex="0" data-tip="LLaDA-1.5 · PAIR · Δ Refusal Rate +0 points"><span class="hbar-baseline"></span><div class="bar is-ar" data-w="0" style="width: 0%;"></div><span class="val">+0</span></div></div></div><div class="hbar-group"><div class="hbar-label">Refusal Suppression</div><div class="hbar-track-set"><div class="hbar-row" tabindex="0" data-tip="LLaDA · Refusal Suppression · Δ Refusal Rate +55 points"><span class="hbar-baseline"></span><div class="bar" data-w="91.66666666666666" style="width: 91.6667%;"></div><span class="val">+55</span></div><div class="hbar-row" tabindex="0" data-tip="LLaDA-1.5 · Refusal Suppression · Δ Refusal Rate +52 points"><span class="hbar-baseline"></span><div class="bar is-ar" data-w="86.66666666666667" style="width: 86.6667%;"></div><span class="val">+52</span></div></div></div><div class="hbar-group"><div class="hbar-label">Random Search</div><div class="hbar-track-set"><div class="hbar-row" tabindex="0" data-tip="LLaDA · Random Search · Δ Refusal Rate +21 points"><span class="hbar-baseline"></span><div class="bar" data-w="35" style="width: 35%;"></div><span class="val">+21</span></div><div class="hbar-row" tabindex="0" data-tip="LLaDA-1.5 · Random Search · Δ Refusal Rate +19 points"><span class="hbar-baseline"></span><div class="bar is-ar" data-w="31.666666666666664" style="width: 31.6667%;"></div><span class="val">+19</span></div></div></div><div class="hbar-group"><div></div><div class="hbar-grid"><span class="is-first" style="left: 0%;">0</span><span style="left: 33.3333%;">+20</span><span style="left: 66.6667%;">+40</span><span class="is-last" style="left: 100%;">+60</span></div></div></div>
+        <p class="chart-note" id="deltaNote">Every value is non-negative; PAIR moves least and Refusal Suppression most in refusal rate. Greedy, random, static and dynamic remasking variants all improve on AR sampling (Appendix A), and an LLM judge confirms every refusal-rate gain (Table 15).</p>
+      </div>
+      <div class="callout">
+        <span class="eyebrow">What you learn</span>
+        <p>Under fixed model weights, enabling recovery by switching from AR sampling to diffusion remasking consistently improves jailbreak robustness across all the evaluated attacks and metrics.</p>
+      </div>
+      <p>Therefore the sampler matters, and the next question is whether the advantage holds across model families of comparable size. The paper compares three AR models (LLaMA-3, Qwen-2.5, Gemma) with three DLMs (LLaDA, LLaDA-1.5, Dream), all 7 to 8B; all refuse raw harmful prompts at relatively high rates, and the differences emerge under attack.</p>
+      <div class="chart-card">
+        <div class="chart-head">
+          <div class="chart-title">Jailbreak robustness, autoregressive vs. diffusion<small>Table 3 · six models, five attacks</small></div>
+          <div class="chart-controls">
+            <div class="select-wrap">
+              <label class="visually-hidden" for="gapAttack">Attack</label>
+              <select id="gapAttack">
+                <option value="all" selected="">All jailbreaks (aggregate)</option>
+                <option value="raw">Raw harmful prompts (no attack)</option>
+                <option value="flip">Flip Attack</option>
+                <option value="pair">PAIR</option>
+                <option value="refsup">Refusal Suppression</option>
+                <option value="random">Random Search</option>
+                <option value="wild">WildJailbreak</option>
+              </select>
+            </div>
+            <div class="seg" id="gapMetric" role="tablist" aria-label="Metric">
+              <button type="button" role="tab" data-metric="asr" aria-selected="true">Attack success ↓</button>
+              <button type="button" role="tab" data-metric="rr" aria-selected="false">Refusal rate ↑</button>
+            </div>
+            <button type="button" class="btn-ghost" id="gapTableBtn" aria-pressed="false" aria-controls="gapTableView">Full table</button>
+          </div>
+        </div>
+        <div class="legend" aria-hidden="true"><span><i style="background:var(--series-ar)"></i>Autoregressive</span><span><i style="background:var(--series-diffusion)"></i>Diffusion</span></div>
+        <div class="hbars" id="chartGap"><div class="hbar-group"><div class="hbar-label">LLaMA-3<small>autoregressive</small></div><div class="hbar-track-set"><div class="hbar-row" tabindex="0" data-tip="LLaMA-3 · All jailbreaks · Attack Success Rate 59.2%"><span class="hbar-baseline"></span><div class="bar is-ar" data-w="59.20000000000001" style="width: 59.2%;"></div><span class="val">59.2%</span></div></div></div><div class="hbar-group"><div class="hbar-label">Qwen-2.5<small>autoregressive</small></div><div class="hbar-track-set"><div class="hbar-row" tabindex="0" data-tip="Qwen-2.5 · All jailbreaks · Attack Success Rate 62.2%"><span class="hbar-baseline"></span><div class="bar is-ar" data-w="62.2" style="width: 62.2%;"></div><span class="val">62.2%</span></div></div></div><div class="hbar-group"><div class="hbar-label">Gemma<small>autoregressive</small></div><div class="hbar-track-set"><div class="hbar-row" tabindex="0" data-tip="Gemma · All jailbreaks · Attack Success Rate 48.2%"><span class="hbar-baseline"></span><div class="bar is-ar" data-w="48.2" style="width: 48.2%;"></div><span class="val">48.2%</span></div></div></div><div class="hbar-group is-family-break"><div class="hbar-label">LLaDA<small>diffusion</small></div><div class="hbar-track-set"><div class="hbar-row" tabindex="0" data-tip="LLaDA · All jailbreaks · Attack Success Rate 18.4%"><span class="hbar-baseline"></span><div class="bar" data-w="18.4" style="width: 18.4%;"></div><span class="val">18.4%</span></div></div></div><div class="hbar-group"><div class="hbar-label">LLaDA-1.5<small>diffusion</small></div><div class="hbar-track-set"><div class="hbar-row" tabindex="0" data-tip="LLaDA-1.5 · All jailbreaks · Attack Success Rate 21%"><span class="hbar-baseline"></span><div class="bar" data-w="21" style="width: 21%;"></div><span class="val">21%</span></div></div></div><div class="hbar-group"><div class="hbar-label">Dream<small>diffusion</small></div><div class="hbar-track-set"><div class="hbar-row" tabindex="0" data-tip="Dream · All jailbreaks · Attack Success Rate 9.4%"><span class="hbar-baseline"></span><div class="bar" data-w="9.4" style="width: 9.4%;"></div><span class="val">9.4%</span></div></div></div><div class="hbar-group"><div></div><div class="hbar-grid"><span class="is-first" style="left: 0%;">0</span><span style="left: 25%;">25</span><span style="left: 50%;">50</span><span style="left: 75%;">75</span><span class="is-last" style="left: 100%;">100%</span></div></div></div>
+        <div class="table-view" id="gapTableView" hidden=""><table class="data-table"><thead><tr><th>Model</th><th>Raw harmful prompts RR ↑</th><th>Raw harmful prompts ASR ↓</th><th>All jailbreaks RR ↑</th><th>All jailbreaks ASR ↓</th><th>Flip Attack RR ↑</th><th>Flip Attack ASR ↓</th><th>PAIR RR ↑</th><th>PAIR ASR ↓</th><th>Refusal Suppression RR ↑</th><th>Refusal Suppression ASR ↓</th><th>Random Search RR ↑</th><th>Random Search ASR ↓</th><th>WildJailbreak RR ↑</th><th>WildJailbreak ASR ↓</th></tr></thead><tbody><tr><td>LLaMA-3 (AR)</td><td class="is-ar">83%</td><td class="is-ar">13%</td><td class="is-ar">23.4%</td><td class="is-ar">59.2%</td><td class="is-ar">1%</td><td class="is-ar">98%</td><td class="is-ar">70%</td><td class="is-ar">24%</td><td class="is-ar">41%</td><td class="is-ar">48%</td><td class="is-ar">3%</td><td class="is-ar">29%</td><td class="is-ar">2%</td><td class="is-ar">97%</td></tr><tr><td>Qwen-2.5 (AR)</td><td class="is-ar">53%</td><td class="is-ar">26%</td><td class="is-ar">11.4%</td><td class="is-ar">62.2%</td><td class="is-ar">2%</td><td class="is-ar">91%</td><td class="is-ar">33%</td><td class="is-ar">44%</td><td class="is-ar">18%</td><td class="is-ar">46%</td><td class="is-ar">4%</td><td class="is-ar">31%</td><td class="is-ar">0%</td><td class="is-ar">99%</td></tr><tr><td>Gemma (AR)</td><td class="is-ar">88%</td><td class="is-ar">8%</td><td class="is-ar">46.2%</td><td class="is-ar">48.2%</td><td class="is-ar">10%</td><td class="is-ar">86%</td><td class="is-ar">76%</td><td class="is-ar">20%</td><td class="is-ar">74%</td><td class="is-ar">17%</td><td class="is-ar">65%</td><td class="is-ar">26%</td><td class="is-ar">6%</td><td class="is-ar">92%</td></tr><tr><td>LLaDA (diffusion)</td><td>83%</td><td>6%</td><td>67.4%</td><td>18.4%</td><td>69%</td><td>24%</td><td>92%</td><td>5%</td><td>79%</td><td>8%</td><td>36%</td><td>26%</td><td>61%</td><td>29%</td></tr><tr><td>LLaDA-1.5 (diffusion)</td><td>84%</td><td>9%</td><td>59.6%</td><td>21%</td><td>59%</td><td>17%</td><td>92%</td><td>2%</td><td>71%</td><td>15%</td><td>27%</td><td>34%</td><td>49%</td><td>37%</td></tr><tr><td>Dream (diffusion)</td><td>89%</td><td>1%</td><td>44.4%</td><td>9.4%</td><td>42%</td><td>18%</td><td>86%</td><td>0%</td><td>46%</td><td>5%</td><td>34%</td><td>4%</td><td>14%</td><td>20%</td></tr></tbody><caption>Table 3 of the paper. RR: Refusal Rate (higher is safer). ASR: Attack Success Rate (lower is safer).</caption></table></div>
+        <p class="chart-note" id="gapNote"><strong>All jailbreaks · Attack Success Rate.</strong> Autoregressive models: 48.2% to 62.2%. Diffusion models: 9.4% to 21%. Lower is safer.</p>
+      </div>
+      <div class="callout">
+        <span class="eyebrow">What you learn</span>
+        <p>Across diverse jailbreak attacks, metrics, and model families, DLMs consistently exhibit better robustness than the evaluated AR models of comparable scale.</p>
+      </div>
+      <h3 class="deep">Text-level signals stop at the surface.</h3>
+      <p class="deep">These results tie the gap to sampling dynamics, but text-level metrics read discrete outputs through LLM judges and never see the hidden space. They cannot tell how close a generation is to refusal when no refusal text is present, so the next act models refusal as an internal, step-wise process.</p>
+    <button class="more-btn" type="button" hidden="" aria-expanded="false"><span>Read the full section</span><i class="chev"></i></button></div>
+
+    <!-- 03 -->
+    <div class="text-block reveal in" id="sri">
+      <span class="eyebrow eyebrow-outline section-eyebrow">03 · The SRI signal</span>
+      <h2>SRI reads refusal inside the model, <span class="accent">step by step</span>.</h2>
+      <p>The goal is a representation of refusal dynamics that works for AR and diffusion models alike. The obstacle is that text shows only committed outputs, so a generation that moves partway toward refusal and then complies looks like any other compliant answer.</p>
+      <div class="figure is-plot">
+        <img src="./Step-Wise Refusal Dynamics in Autoregressive and Diffusion Language Models _ Project page_files/fig2-sri-anomaly-qwen.png" alt="Line plot of the SRI refusal score over 32 generation steps for Qwen-2.5 under a jailbreak prompt. The harmless reference stays flat near 1 and the refusal reference flat near 0. The harmful generation falls from about 1 to about 0.45 by step 7, hovers just below the 0.5 boundary until step 11 and climbs back to about 0.95, while the dashed text-level refusal signal stays flat at 1 throughout." loading="lazy">
+        <p class="figure-caption"><strong>Figure 2.</strong> Anomalous behavior in SRI space, invisible at the text level (Qwen-2.5, AR): the harmful generation dips toward refusal and returns while the dashed text-level signal stays flat.</p>
+      </div>
+      <p>The key observation, following prior work on refusal directions, is that hidden states encode refusal alignment before it appears in text. Anchoring the activation space at every step with a harmless and a harmful center turns the position of the current step into a reading of internal compliance.</p>
+      <div class="flow">
+        <div class="flow-step"><span class="flow-num">1</span><h4>Anchor the space</h4><p>Run a harmless and a harmful prompt set once; store the mean last-layer activation of each at every step.</p></div>
+        <span class="flow-arrow" aria-hidden="true">→</span>
+        <div class="flow-step"><span class="flow-num">2</span><h4>Read the hidden states</h4><p>At step <em>t</em>, mean-pool the last-layer activations of the generated tokens into one vector φ<sub>t</sub>.</p></div>
+        <span class="flow-arrow" aria-hidden="true">→</span>
+        <div class="flow-step is-accent"><span class="flow-num">3</span><h4>Score the step</h4><p>Cosine distance from φ<sub>t</sub> to each center, temperature-scaled log-ratio, sigmoid: σ<sub>t</sub> runs from 1 (compliant) to 0 (refusal-aligned).</p></div>
+      </div>
+
+      <div class="deep equation-block">
+        <div class="equation">
+          <span class="eq-label">Step-wise representation and anchors</span>
+          <span class="eq-content"><span class="eq-term">φ<sub>t</sub> = (1 / P<sub>t</sub>) · Σ<sub>j=1..P<sub>t</sub></sub> h<sub>t,j</sub></span><span class="eq-term"><span class="eq-hl-c">μ<sub>t</sub><sup>harmless</sup></span> = E<sub>x∼D<sub>harmless</sub></sub>[φ<sub>t</sub>(x)]</span><span class="eq-term"><span class="eq-hl-b">μ<sub>t</sub><sup>harmful</sup></span> = E<sub>x∼D<sub>harmful</sub></sub>[φ<sub>t</sub>(x)]</span></span>
+        </div>
+        <div class="equation-caption"><em>h<sub>t,j</sub></em> is the final-layer activation of token <em>j</em> at step <em>t</em>; the anchors use 400 Alpaca and 400 AdvBench prompts. Later layers predict high-level semantics and decisions best, as the ablation in the next act confirms.</div>
+      </div>
+
+      <div class="deep equation-block">
+        <div class="equation">
+          <span class="eq-label">Cosine distances → calibrated log-ratio → SRI</span>
+          <span class="eq-content"><span class="eq-term">d<sub>t</sub><sup>k</sup> = 1 − ⟨φ<sub>t</sub>, μ<sub>t</sub><sup>k</sup>⟩ / (‖φ<sub>t</sub>‖ ‖μ<sub>t</sub><sup>k</sup>‖), &nbsp; k ∈ {harmless, harmful}</span><br>
+          <span class="eq-term">ℓ<sub>t</sub> = [ log(<span class="eq-hl-b">d<sub>t</sub><sup>harmful</sup></span> + ε) − log(<span class="eq-hl-c">d<sub>t</sub><sup>harmless</sup></span> + ε) ] / τ</span><span class="eq-term"><span class="eq-hl-a">σ<sub>t</sub> = sigmoid(ℓ<sub>t</sub>)</span></span></span>
+        </div>
+        <div class="equation-caption"><strong>σ<sub>t</sub> = 1</strong> is an internally compliant state, <strong>σ<sub>t</sub> = 0</strong> a refusal-aligned state, intermediate values transitional. τ = 0.1 keeps signals calibrated and sensitive to transitions, ε ensures stability, and <em>T</em> = 32 steps form one signal.</div>
+      </div>
+
+      <div class="deep tech-cards">
+        <div class="tech-card">
+          <div class="tech-card-num">1</div>
+          <h4>Anchors from plain prompts</h4>
+          <p>No jailbreak prompt enters the anchors or the detector; performance stays strong when the anchor source is replaced and improves with anchor-set size (Appendix E.2).</p>
+        </div>
+        <div class="tech-card">
+          <div class="tech-card-num">2</div>
+          <h4>Cosine distance</h4>
+          <p>Directional similarity is robust to step-dependent scaling of activation norms.</p>
+        </div>
+        <div class="tech-card">
+          <div class="tech-card-num">3</div>
+          <h4>One signal for both paradigms</h4>
+          <p>One (0, 1) scale for every step, comparable across steps, models and samplers.</p>
+        </div>
+      </div>
+
+      <h3 class="deep">Jailbreak generations leave a volatile trace in SRI space.</h3>
+      <p class="deep">Harmless and explicitly refused generations produce smooth, low-variance trajectories, while jailbreak-induced generations are volatile and non-stationary in AR and diffusion models alike. Many show <strong>incomplete internal recovery</strong>, moving toward refusal without converging, mostly under AR sampling. Under Linear Discriminant Analysis they occupy distinct regions of SRI space, imperfectly separable yet stable enough for a detector.</p>
+
+      <div class="deep explorer" id="explorer">
+        <div class="chart-head">
+          <div class="chart-title">Explore the SRI space, one model at a time<small>Figures 12 and 13 · left: SRI signal under a jailbreak prompt · right: LDA projection of the SRI space</small></div>
+        </div>
+        <div class="explorer-tabs" id="explorerTabs" role="tablist" aria-label="Model">
+          <button type="button" role="tab" data-model="llama3" aria-selected="true"><i></i>LLaMA-3</button>
+          <button type="button" role="tab" data-model="qwen25" aria-selected="false"><i></i>Qwen-2.5</button>
+          <button type="button" role="tab" data-model="gemma" aria-selected="false"><i></i>Gemma</button>
+          <button type="button" role="tab" class="is-dlm" data-model="llada" aria-selected="false"><i></i>LLaDA</button>
+          <button type="button" role="tab" class="is-dlm" data-model="llada15" aria-selected="false"><i></i>LLaDA-1.5</button>
+          <button type="button" role="tab" class="is-dlm" data-model="dream" aria-selected="false"><i></i>Dream</button>
+        </div>
+        <div class="explorer-grid">
+          <div class="explorer-pane">
+            <img id="explorerSri" width="1400" height="700" src="./Step-Wise Refusal Dynamics in Autoregressive and Diffusion Language Models _ Project page_files/fig12-sri-llama3.png" alt="SRI signal over 32 generation steps for LLaMA-3 under a jailbreak prompt, with flat harmless and refusal reference trajectories and shaded compliance and refusal regions." loading="lazy">
+          </div>
+          <div class="explorer-pane">
+            <img id="explorerLda" width="1000" height="903" src="./Step-Wise Refusal Dynamics in Autoregressive and Diffusion Language Models _ Project page_files/fig13-lda-llama3.png" alt="Two-dimensional LDA projection of the SRI space for LLaMA-3: harmless, harmful and refusal responses occupy distinct but partly overlapping regions." loading="lazy">
+          </div>
+        </div>
+        <div class="explorer-note">
+          <span class="eyebrow eyebrow-badge fam" id="explorerFam">Autoregressive</span>
+          <p id="explorerNote"><strong>LLaMA-3.</strong> The harmless and refusal references stay flat and well separated. The jailbreak trajectory drops into the refusal region within the first few steps and then climbs back into the compliance region, an internal move toward refusal that does not complete while the text-level signal stays flat. LLaMA-3 reaches a 59.2% Attack Success Rate across jailbreaks, its Internal Recovery Rate stays near 0.1 at every threshold (Figure 5), and SRI Guard lifts its jailbreak refusal rate from 23.4% to 55.0% at 0.01% overhead (Table 13).</p>
+        </div>
+      </div>
+
+      <h3 class="deep">SRI reveals that internal recovery tracks robustness.</h3>
+      <p class="deep">The signal measures recovery without an LLM judge. The Internal Recovery Rate (IRR) is the share of internally compliant responses (σ<sub>t</sub> above λ<sub>c</sub> at some step) that end refusal-aligned (σ<sub>T</sub> below λ<sub>r</sub>).</p>
+      <div class="deep equation-block">
+        <div class="equation">
+          <span class="eq-label">Internal Recovery Rate</span>
+          <span class="eq-content"><span class="eq-term">IRR = |{ x : ∃ t &lt; T, σ<sub>t</sub>(x) &gt; λ<sub>c</sub> ∧ σ<sub>T</sub>(x) &lt; λ<sub>r</sub> }| &nbsp;/&nbsp; |{ x : ∃ t &lt; T, σ<sub>t</sub>(x) &gt; λ<sub>c</sub> }|</span></span>
+        </div>
+        <div class="equation-caption">Throughout, λ<sub>c</sub> = 0.5, and λ<sub>r</sub> ∈ {0.5, 0.3, 0.1} moves from a weak to a strict definition of refusal, so the conclusions do not depend on one threshold.</div>
+      </div>
+      <div class="deep figure-grid" style="--cols: 2">
+        <div class="figure is-plot">
+          <img src="./Step-Wise Refusal Dynamics in Autoregressive and Diffusion Language Models _ Project page_files/fig5-irr-per-model.png" alt="Bar chart of Internal Recovery Rate per model at three refusal thresholds. The autoregressive models Qwen, LLaMA-3 and Gemma stay below about 0.15 at every threshold, while the diffusion models LLaDA, Dream and LLaDA-1.5 reach roughly 0.4 to 0.6 at the loosest threshold and stay above the autoregressive models as the threshold tightens." loading="lazy">
+          <p class="figure-caption"><strong>Figure 5.</strong> Per-model IRR at three refusal thresholds, AR in blue, diffusion in red. Diffusion models recover more often at every threshold.</p>
+        </div>
+        <div class="figure is-plot">
+          <img src="./Step-Wise Refusal Dynamics in Autoregressive and Diffusion Language Models _ Project page_files/fig6-irr-sampling.png" alt="Grouped bars for LLaDA and LLaDA-1.5 at three refusal thresholds. Under AR sampling of the same weights the Internal Recovery Rate stays below about 0.17, while under diffusion sampling it reaches 0.39 to 0.63; the labelled differences range from 0.29 to 0.48." loading="lazy">
+          <p class="figure-caption"><strong>Figure 6.</strong> The same weights under both samplers. Switching LLaDA or LLaDA-1.5 to AR sampling lowers IRR at every threshold, consistent with Table 2.</p>
+        </div>
+      </div>
+      <div class="callout">
+        <span class="eyebrow">What you learn</span>
+        <p>Stronger internal recovery is associated with higher HRR and FRR, improved jailbreak robustness, and diffusion rather than AR sampling.</p>
+      </div>
+    <button class="more-btn" type="button" hidden="" aria-expanded="false"><span>Read the full section</span><i class="chev"></i></button></div>
+
+    <!-- 04 -->
+    <div class="text-block reveal in" id="guard">
+      <span class="eyebrow eyebrow-outline section-eyebrow">04 · SRI Guard</span>
+      <h2>The signal becomes a <span class="accent">safeguard</span> trained on benign generations only.</h2>
+      <p>The obstacle is that a successful jailbreak often shows no refusal in its text, so the text-level signal stays flat while the model complies. The key observation is that such generations still deviate from benign compliant trajectories, and the deviation is anomalous in SRI space.</p>
+      <div class="flow">
+        <div class="flow-step"><span class="flow-num">1</span><h4>Collect benign signals</h4><p>SRI signals for 1,200 harmless Alpaca prompts; no jailbreak prompt at any stage.</p></div>
+        <span class="flow-arrow" aria-hidden="true">→</span>
+        <div class="flow-step"><span class="flow-num">2</span><h4>Fit an autoencoder</h4><p>Two encoder and two decoder layers, about 3,000 parameters, L2 reconstruction loss.</p></div>
+        <span class="flow-arrow" aria-hidden="true">→</span>
+        <div class="flow-step"><span class="flow-num">3</span><h4>Score a generation</h4><p>The reconstruction error of its SRI signal is the anomaly score.</p></div>
+        <span class="flow-arrow" aria-hidden="true">→</span>
+        <div class="flow-step is-accent"><span class="flow-num">4</span><h4>Threshold and flag</h4><p>Flag when the error exceeds the 99% quantile on 200 held-out harmless prompts.</p></div>
+      </div>
+      <div class="deep equation-block">
+        <div class="equation">
+          <span class="eq-label">Train on benign only</span>
+          <span class="eq-content"><span class="eq-term">L<sub>AE</sub> = E<sub>S∼S<sub>harmless</sub></sub> ‖ S − f<sub>ψ</sub>(S) ‖<sub>2</sub><sup>2</sup></span><span class="eq-term">flag(x) ⇔ ‖ S(x) − f<sub>ψ</sub>(S(x)) ‖<sub>2</sub><sup>2</sup> &gt; q<sub>0.99</sub></span></span>
+        </div>
+        <div class="equation-caption">The training loss doubles as the anomaly score, thresholded at q<sub>0.99</sub>, the 99% quantile on the held-out harmless set. The detector leaves sampling untouched and, trained on benign signals only, generalizes to attacks it has never seen.</div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-head">
+          <div class="chart-title">Defenses compared under one protocol<small>Table 13 · pick a model · overhead relative to base generation time</small></div>
+          <div class="chart-controls">
+            <div class="select-wrap">
+              <label class="visually-hidden" for="defenseModel">Model</label>
+              <select id="defenseModel">
+                <option value="llada" selected="">LLaDA (diffusion)</option>
+                <option value="llada15">LLaDA-1.5 (diffusion)</option>
+                <option value="dream">Dream (diffusion)</option>
+                <option value="qwen25">Qwen-2.5 (autoregressive)</option>
+                <option value="llama3">LLaMA-3 (autoregressive)</option>
+                <option value="gemma">Gemma (autoregressive)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="defense-rows">
+          <div class="defense-head" aria-hidden="true"><span>Defense</span><span>Overhead ↓</span><span>False positives ↓</span><span>Jailbreak refusal ↑</span><span>Jailbreak attack success ↓</span></div>
+          <div id="defenseRows"><div class="defense-row"><div class="defense-name">Undefended</div><div class="mini" tabindex="0" data-tip="Undefended on LLaDA · Overhead 0.00%"><div class="track"><div class="fill" data-w="0" style="width: 0%;"></div></div><span class="num" data-label="Overhead">0.00%</span></div><div class="mini" tabindex="0" data-tip="Undefended on LLaDA · False positives 7%"><div class="track"><div class="fill" data-w="70" style="width: 70%;"></div></div><span class="num" data-label="False positives">7%</span></div><div class="mini" tabindex="0" data-tip="Undefended on LLaDA · Jailbreak refusal 67.4%"><div class="track"><div class="fill" data-w="67.4" style="width: 67.4%;"></div></div><span class="num" data-label="Jailbreak refusal">67.4%</span></div><div class="mini" tabindex="0" data-tip="Undefended on LLaDA · Attack success 18.4%"><div class="track"><div class="fill" data-w="18.4" style="width: 18.4%;"></div></div><span class="num" data-label="Attack success">18.4%</span></div></div><div class="defense-row"><div class="defense-name">PPL filtering</div><div class="mini" tabindex="0" data-tip="PPL filtering on LLaDA · Overhead 6.26%"><div class="track"><div class="fill" data-w="48.15384615384615" style="width: 48.1538%;"></div></div><span class="num" data-label="Overhead">6.26%</span></div><div class="mini" tabindex="0" data-tip="PPL filtering on LLaDA · False positives 9%"><div class="track"><div class="fill" data-w="90" style="width: 90%;"></div></div><span class="num" data-label="False positives">9%</span></div><div class="mini" tabindex="0" data-tip="PPL filtering on LLaDA · Jailbreak refusal 68.0%"><div class="track"><div class="fill" data-w="68" style="width: 68%;"></div></div><span class="num" data-label="Jailbreak refusal">68.0%</span></div><div class="mini" tabindex="0" data-tip="PPL filtering on LLaDA · Attack success 18.2%"><div class="track"><div class="fill" data-w="18.2" style="width: 18.2%;"></div></div><span class="num" data-label="Attack success">18.2%</span></div></div><div class="defense-row"><div class="defense-name">Self-Examine</div><div class="mini" tabindex="0" data-tip="Self-Examine on LLaDA · Overhead 7.74%"><div class="track"><div class="fill" data-w="59.53846153846154" style="width: 59.5385%;"></div></div><span class="num" data-label="Overhead">7.74%</span></div><div class="mini" tabindex="0" data-tip="Self-Examine on LLaDA · False positives 7%"><div class="track"><div class="fill" data-w="70" style="width: 70%;"></div></div><span class="num" data-label="False positives">7%</span></div><div class="mini" tabindex="0" data-tip="Self-Examine on LLaDA · Jailbreak refusal 67.4%"><div class="track"><div class="fill" data-w="67.4" style="width: 67.4%;"></div></div><span class="num" data-label="Jailbreak refusal">67.4%</span></div><div class="mini" tabindex="0" data-tip="Self-Examine on LLaDA · Attack success 18.4%"><div class="track"><div class="fill" data-w="18.4" style="width: 18.4%;"></div></div><span class="num" data-label="Attack success">18.4%</span></div></div><div class="defense-row"><div class="defense-name">LlamaGuard 3</div><div class="mini" tabindex="0" data-tip="LlamaGuard 3 on LLaDA · Overhead 12.42%"><div class="track"><div class="fill" data-w="95.53846153846153" style="width: 95.5385%;"></div></div><span class="num" data-label="Overhead">12.42%</span></div><div class="mini" tabindex="0" data-tip="LlamaGuard 3 on LLaDA · False positives 7%"><div class="track"><div class="fill" data-w="70" style="width: 70%;"></div></div><span class="num" data-label="False positives">7%</span></div><div class="mini" tabindex="0" data-tip="LlamaGuard 3 on LLaDA · Jailbreak refusal 77.2%"><div class="track"><div class="fill" data-w="77.2" style="width: 77.2%;"></div></div><span class="num" data-label="Jailbreak refusal">77.2%</span></div><div class="mini" tabindex="0" data-tip="LlamaGuard 3 on LLaDA · Attack success 14.4%"><div class="track"><div class="fill" data-w="14.400000000000002" style="width: 14.4%;"></div></div><span class="num" data-label="Attack success">14.4%</span></div></div><div class="defense-row is-ours"><div class="defense-name">SRI Guard<small>ours · internal signal</small></div><div class="mini" tabindex="0" data-tip="SRI Guard on LLaDA · Overhead 0.04%"><div class="track"><div class="fill" data-w="0.3076923076923077" style="width: 0.307692%;"></div></div><span class="num" data-label="Overhead">0.04%</span></div><div class="mini" tabindex="0" data-tip="SRI Guard on LLaDA · False positives 9%"><div class="track"><div class="fill" data-w="90" style="width: 90%;"></div></div><span class="num" data-label="False positives">9%</span></div><div class="mini" tabindex="0" data-tip="SRI Guard on LLaDA · Jailbreak refusal 73.4%"><div class="track"><div class="fill" data-w="73.4" style="width: 73.4%;"></div></div><span class="num" data-label="Jailbreak refusal">73.4%</span></div><div class="mini" tabindex="0" data-tip="SRI Guard on LLaDA · Attack success 16.8%"><div class="track"><div class="fill" data-w="16.8" style="width: 16.8%;"></div></div><span class="num" data-label="Attack success">16.8%</span></div></div></div>
+        </div>
+        <p class="chart-note" id="defenseNote"><strong>LLaDA.</strong> SRI Guard adds 0.04% overhead against 12.42% for LlamaGuard 3, two orders of magnitude less, and reaches a jailbreak refusal rate of 73.4% against 77.2% for LlamaGuard 3. The detection threshold is the 99% quantile of the reconstruction error on held-out harmless prompts; the false positives of the undefended model come from the base model refusing benign prompts on its own.</p>
+      </div>
+
+      <div class="deep figure is-plot">
+        <img src="./Step-Wise Refusal Dynamics in Autoregressive and Diffusion Language Models _ Project page_files/fig7-defenses-vs-overhead.png" alt="Three scatter panels of refusal rate, false positives and attack success rate against inference overhead on a log scale. SRI Guard sits at about 0.01 to 0.04 percent overhead with metrics that, averaged across models, match or beat PPL, Self-Examine and LlamaGuard 3, which sit at 2 to 12 percent overhead." loading="lazy">
+        <p class="figure-caption"><strong>Figure 7.</strong> Refusal Rate (higher is better), Attack Success Rate and False Positives (lower is better) against inference overhead, log scale; points are means across models, ellipses one standard deviation. SRI Guard matches or outperforms the existing defenses at 150 to 300 times lower cost.</p>
+      </div>
+
+      <div class="deep figure-grid" style="--cols: 2">
+        <div class="chart-card">
+          <div class="chart-head">
+            <div class="chart-title">Ablation of the SRI design choices<small>Table 4 · mean AUROC across the six models</small></div>
+          </div>
+          <div class="hbars" id="chartAblation"><div class="hbar-group"><div class="hbar-label">Text-based signal</div><div class="hbar-track-set"><div class="hbar-row" tabindex="0" data-tip="Text-based signal · AUROC 0.573 ± 0.221"><span class="hbar-baseline"></span><div class="bar is-dim" data-w="57.3" style="width: 57.3%;"></div><span class="val">0.573 <small>± 0.221</small></span></div></div></div><div class="hbar-group"><div class="hbar-label">Static activations (first step)</div><div class="hbar-track-set"><div class="hbar-row" tabindex="0" data-tip="Static activations (first step) · AUROC 0.584 ± 0.138"><span class="hbar-baseline"></span><div class="bar is-dim" data-w="58.4" style="width: 58.4%;"></div><span class="val">0.584 <small>± 0.138</small></span></div></div></div><div class="hbar-group"><div class="hbar-label">SRI, first layer</div><div class="hbar-track-set"><div class="hbar-row" tabindex="0" data-tip="SRI, first layer · AUROC 0.566 ± 0.101"><span class="hbar-baseline"></span><div class="bar is-dim" data-w="56.599999999999994" style="width: 56.6%;"></div><span class="val">0.566 <small>± 0.101</small></span></div></div></div><div class="hbar-group"><div class="hbar-label">SRI, middle layer</div><div class="hbar-track-set"><div class="hbar-row" tabindex="0" data-tip="SRI, middle layer · AUROC 0.864 ± 0.062"><span class="hbar-baseline"></span><div class="bar is-dim" data-w="86.4" style="width: 86.4%;"></div><span class="val">0.864 <small>± 0.062</small></span></div></div></div><div class="hbar-group"><div class="hbar-label">SRI, last layer (ours)</div><div class="hbar-track-set"><div class="hbar-row" tabindex="0" data-tip="SRI, last layer (ours) · AUROC 0.920 ± 0.047"><span class="hbar-baseline"></span><div class="bar is-emph" data-w="92" style="width: 92%;"></div><span class="val">0.920 <small>± 0.047</small></span></div></div></div><div class="hbar-group"><div></div><div class="hbar-grid"><span class="is-first" style="left: 0%;">0</span><span style="left: 50%;">0.5</span><span class="is-last" style="left: 100%;">1.0</span></div></div></div>
+          <p class="chart-note">Temporal structure, internal activations and late layers each contribute: text-based, static first-step and first-layer signals stay near chance, the step-wise last-layer signal separates best.</p>
+        </div>
+        <div class="figure is-plot">
+          <img src="./Step-Wise Refusal Dynamics in Autoregressive and Diffusion Language Models _ Project page_files/fig14-roc.png" alt="ROC curves averaged across models for five signal variants, with shaded bands for variance across models. The last-layer SRI curve rises fastest and stays highest, the middle-layer SRI curve comes next, and the text-based, static first-step and first-layer curves stay close to the diagonal." loading="lazy">
+          <p class="figure-caption"><strong>Figure 14.</strong> ROC curves averaged across models. Step-wise SRI from deeper layers separates better than text-based and static activation signals across operating points, and the last layer performs best.</p>
+        </div>
+      </div>
+
+      <h3 class="deep">The guard holds under diffusion-specific attacks.</h3>
+      <p class="deep">Under PAD and DIJA, two white-box attacks built for DLMs, SRI Guard on LLaDA lowers Attack Success Rate from 0.53 to 0.29 and from 0.76 to 0.29, where DiffuGuard, a diffusion-specific defense, reaches 0.45 and 0.59 (Table 14). It also assumes less, since DiffuGuard requires the original pre-manipulated prompt.</p>
+      <h3 class="deep">SRI Guard complements alignment training.</h3>
+      <p class="deep">SRI Guard relies on internal refusal signals, so it can miss a jailbreak when the model shows no hesitation toward refusal at any step. Its negligible overhead and independence from sampling make it a natural complement to other defenses, a combination the paper leaves to future work.</p>
+    <button class="more-btn" type="button" hidden="" aria-expanded="false"><span>Read the full section</span><i class="chev"></i></button></div>
+
+    <!-- 05 -->
+    <div class="text-block reveal in" id="build">
+      <span class="eyebrow eyebrow-outline section-eyebrow">05 · Build on SRI</span>
+      <h2>SRI needs per-step hidden states and two prompt sets, so it <span class="accent">applies</span> to new models.</h2>
+      <p>You need a model whose last-layer hidden states you can read at every generation step, plus a harmless and a harmful prompt set for the anchors. The signal is Algorithm 1 of the paper, the detector Algorithm 2.</p>
+      <ol class="recipe">
+        <li><strong>Anchors.</strong> Generate from both prompt sets and store, for every step <em>t</em>, the mean pooled last-layer activation of each set, μ<sub>t</sub><sup>harmless</sup> and μ<sub>t</sub><sup>harmful</sup>. The paper uses 400 prompts per set; other sources and smaller sets still give strong performance (Appendix E.2).</li>
+        <li><strong>Per-step activations.</strong> For a test prompt, mean-pool the last-layer activations of the generated tokens at each step into φ<sub>t</sub>.</li>
+        <li><strong>Distances to score.</strong> Cosine distance from φ<sub>t</sub> to each anchor, log-ratio scaled by τ = 0.1 with a small ε, then a sigmoid; the <em>T</em> = 32 values σ<sub>t</sub> are the SRI signal.</li>
+        <li><strong>Optional detector.</strong> Fit a small autoencoder on harmless SRI signals, set the threshold at a quantile of held-out reconstruction error, and flag generations above it.</li>
+      </ol>
+
+      <div class="deep tool-card reveal in" id="code" style="flex-direction:column;align-items:stretch">
+          <div class="tool-card-body">
+            <span class="eyebrow eyebrow-badge">Open source</span>
+            <h4>Generate SRI signals for your own model.</h4>
+            <p>The <code style="font-family:var(--font-mono);font-size:0.9em">sri-signal</code> repository wraps a language model, builds the anchor centers from your prompt sets and produces step-wise SRI signals for any prompt. Wrappers cover LLaDA and LLaMA-3, each with a runnable notebook, and a new model means subclassing <code style="font-family:var(--font-mono);font-size:0.9em">BaseWrapper</code> and implementing two methods.</p>
+            <a href="https://github.com/ElironRahimi/sri-signal" class="tool-card-cta btn-pill" target="_blank" rel="noopener">
+              <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"></path></svg>
+              Open on GitHub
+            </a>
+          </div>
+          <div class="tool-card-media">
+<pre class="code-block"><span class="c"># 1. clone and install</span>
+git clone --recurse-submodules https://github.com/ElironRahimi/sri-signal
+cd sri-signal &amp;&amp; pip install -r requirements.txt
+
+<span class="c"># 2. wrap a model, build the anchor centers, generate signals</span>
+<span class="k">from</span> utils <span class="k">import</span> read_alpaca, read_advbench, GenerationProfile
+<span class="k">from</span> Models.LLaDAWrapper <span class="k">import</span> LLADAModelWrapper
+modelWrapper = LLADAModelWrapper(
+    generation_profile=GenerationProfile(), device=<span class="c">"cuda"</span>
+)
+modelWrapper._load_model()
+modelWrapper.generateCenter(
+    harmless_prompts=read_alpaca(400), harmful_prompts=read_advbench(400)
+)
+signals = modelWrapper.generateSignal(prompts=test_prompts)
+<span class="c"># one SRI signal per prompt: T values in (0, 1), 1 compliant, 0 refusal-aligned</span></pre>
+            <div class="model-chips" aria-label="Models evaluated in the paper">
+              <span><i></i>LLaMA-3</span><span><i></i>Qwen-2.5</span><span><i></i>Gemma</span>
+              <span class="is-dlm"><i></i>LLaDA</span><span class="is-dlm"><i></i>LLaDA-1.5</span><span class="is-dlm"><i></i>Dream</span>
+            </div>
+          </div>
+        </div>
+
+      <p>The <a class="js-colab" href="https://colab.research.google.com/github/GabrieleSerussi/sri-project-page/blob/main/colab/sri_playground.ipynb" target="_blank" rel="noopener">Colab notebook</a> runs the pipeline end to end: type a prompt and watch the step-wise SRI signal of that generation, drawn with the same animation as the cover.</p>
+
+      <h3 class="deep">Four directions follow from the paper's results.</h3>
+      <ul class="deep">
+        <li><strong>Other layers.</strong> Middle-layer SRI separates far better than first-layer SRI and slightly below the last layer, so intermediate-layer signals are an open design choice (Section 4.4).</li>
+        <li><strong>Other model families.</strong> The hybrid model SDAR recovers and LLaDA-2 at 16B preserves the SRI geometry, so hybrid and larger models are natural next targets (Appendices A and E.4).</li>
+        <li><strong>Combined defenses.</strong> SRI Guard leaves sampling untouched and adds negligible overhead, so stacking it with other defenses is untested and open (Limitations).</li>
+        <li><strong>Black-box targets.</strong> SRI from a white-box surrogate (Dream, 7B) already defends a black-box LLaDA-2 (Table 24), so surrogate choice and transfer are open (Appendix E.6).</li>
+      </ul>
+      <a href="https://arxiv.org/abs/2602.02600" class="article-closing-cta" target="_blank" rel="noopener">Read the paper on arXiv</a>
+    <button class="more-btn" type="button" hidden="" aria-expanded="false"><span>Read the full section</span><i class="chev"></i></button></div>
+
+  </div>
+
+  <aside class="quick-links">
+    <div class="quick-links-title">Quick links</div>
+    <div class="quick-links-list">
+      <a href="https://arxiv.org/abs/2602.02600" target="_blank" rel="noopener"><span class="ql-icon"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9.92 9.49l2.05 2.48 6.02-7.1c.32-.43.47-.65.32-1.02a1.08 1.08 0 0 0-.96-.68c-.22-.02-.44.05-.64.24L9.92 9.49z" fill="#9B9A9A"></path><path d="M15.32 10.68 5.75 1.46a1.36 1.36 0 0 0-.75-.45.99.99 0 0 0-.93.6c-.15.36-.04.62.29 1.09l7.62 9.28-5.67 7c-.3.31-.42.84-.29 1.18.15.37.5.6.94.6.26 0 .5-.13.68-.33l7.68-7.18a1.7 1.7 0 0 0 .57-1.29 1.7 1.7 0 0 0-.57-1.28z" fill="#333332"></path><path d="M19.64 21.27 11.95 11.96 9.9 9.48l-1.25 1.13a1.7 1.7 0 0 0 0 2.69l9.76 9.44c.17.18.4.29.67.26a.9.9 0 0 0 .86-.6 1 1 0 0 0-.3-1.13z" fill="#9B9A9A"></path></svg></span>arXiv</a>
+      <a href="https://arxiv.org/pdf/2602.02600" target="_blank" rel="noopener"><span class="ql-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3v4a1 1 0 0 0 1 1h4"></path><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"></path><path d="M12 11v6"></path><path d="m9.5 14.5 2.5 2.5 2.5-2.5"></path></svg></span>PDF</a>
+      <a href="https://github.com/ElironRahimi/sri-signal" target="_blank" rel="noopener"><span class="ql-icon"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"></path></svg></span>Code</a>
+      <a href="https://gabrieleserussi.github.io/sri-project-page/#bibtex"><span class="ql-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 8h10M7 12h10M7 16h6"></path><rect x="3.5" y="3.5" width="17" height="17" rx="3"></rect></svg></span>BibTeX</a>
+      <a class="js-colab" href="https://colab.research.google.com/github/GabrieleSerussi/sri-project-page/blob/main/colab/sri_playground.ipynb" target="_blank" rel="noopener"><span class="ql-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"></circle><path d="M10 8.5v7l5.5-3.5z"></path></svg></span>Colab demo</a>
+    </div>
+    <button class="quick-links-share" id="shareBtn" type="button"><span class="ql-icon"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.33 15.72c-.68 0-1.28.27-1.74.7l-6.34-3.75c.04-.21.08-.42.08-.63 0-.22-.04-.43-.08-.63l6.27-3.72c.48.46 1.11.74 1.81.74 1.48 0 2.67-1.21 2.67-2.71S18.81 3 17.33 3s-2.67 1.21-2.67 2.71c0 .22.04.43.08.63L8.48 10.06c-.48-.46-1.11-.74-1.81-.74C5.19 9.33 4 10.54 4 12.04s1.19 2.71 2.67 2.71c.7 0 1.33-.28 1.81-.74l6.33 3.76c-.04.19-.07.39-.07.59 0 1.45 1.16 2.64 2.6 2.64s2.6-1.18 2.6-2.64-1.16-2.64-2.6-2.64z"></path></svg></span>Share this page</button>
+    <ul class="toc" aria-label="On this page">
+      <li><a href="https://gabrieleserussi.github.io/sri-project-page/#recovery"><small>01</small>Recovery by revision</a></li>
+      <li><a href="https://gabrieleserussi.github.io/sri-project-page/#sampler"><small>02</small>Sampler and scale</a></li>
+      <li><a href="https://gabrieleserussi.github.io/sri-project-page/#sri"><small>03</small>The SRI signal</a></li>
+      <li><a href="https://gabrieleserussi.github.io/sri-project-page/#guard"><small>04</small>SRI Guard</a></li>
+      <li><a href="https://gabrieleserussi.github.io/sri-project-page/#build"><small>05</small>Build on SRI</a></li>
+    </ul>
+  </aside>
+</div>
+
+<!-- ====================== QUOTE ====================== -->
+<section class="home-section home-section--tight">
+  <div class="quote-block reveal in">
+    <blockquote id="quoteText"><span class="qw">“Our</span> <span class="qw">findings</span> <span class="qw">suggest</span> <span class="qw">that</span> <span class="qw">jailbreak</span> <span class="qw">robustness</span> <span class="qw">is</span> <span class="qw">shaped</span> <span class="qw">not</span> <span class="qw">only</span> <span class="qw">by</span> <span class="qw">model</span> <span class="qw">weights,</span> <span class="qw">but</span> <span class="qw">also</span> <span class="qw">by</span> <span class="qw">the</span> <span class="qw">sampling</span> <span class="qw">dynamics</span> <span class="qw">used</span> <span class="qw">during</span> <span class="qw">generation.</span> <span class="qw">[…]</span> <span class="qw">These</span> <span class="qw">results</span> <span class="qw">suggest</span> <span class="qw">that</span> <span class="qw">future</span> <span class="qw">safety</span> <span class="qw">evaluations</span> <span class="qw">should</span> <span class="qw">consider</span> <span class="qw">generation</span> <span class="qw">trajectories,</span> <span class="qw">rather</span> <span class="qw">than</span> <span class="qw">only</span> <span class="qw">final</span> <span class="qw">outputs.”</span></blockquote>
+    <div class="quote-attribution">
+      <div>
+        <div class="quote-name">From the paper's Discussion (Section 6)</div>
+        <div class="quote-role">Rahimi, Hirshel, Himelstein, LeVi, Mendelson and Baskin · <a href="https://arxiv.org/abs/2602.02600" target="_blank" rel="noopener">arXiv:2602.02600</a></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== BIBTEX + CONTACT ====================== -->
+<section class="home-section" id="bibtex">
+  <div class="section-intro reveal in">
+    <h2 class="home-section-heading">Cite this work.</h2>
+    <p>Content warning: the paper contains examples of harmful language used solely for research and analysis purposes.</p>
+  </div>
+  <div class="bibtex-block reveal in">
+    <button type="button" class="btn-ghost bibtex-copy" id="bibtexCopy">Copy BibTeX</button>
+<pre id="bibtexText">@misc{rahimi2026stepwiserefusaldynamicsautoregressive,
+      title={Step-Wise Refusal Dynamics in Autoregressive and Diffusion Language Models},
+      author={Eliron Rahimi and Elad Hirshel and Rom Himelstein and Amit LeVi and Avi Mendelson and Chaim Baskin},
+      year={2026},
+      eprint={2602.02600},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2602.02600},
+}</pre>
+  </div>
+  <div class="contact-list reveal in">
+    <a href="mailto:elironrahimi@campus.technion.ac.il">Eliron Rahimi · Corresponding author · elironrahimi@campus.technion.ac.il</a>
+    <a href="mailto:chaimbaskin@bgu.ac.il">Chaim Baskin · chaimbaskin@bgu.ac.il</a>
+  </div>
+</section>
+
+<!-- ====================== DECART BANNER ====================== -->
+<section class="home-section" id="decart">
+  <div class="cta-banner reveal in">
+    <svg class="blueprint" viewBox="0 0 1200 500" preserveAspectRatio="none" aria-hidden="true">
+      <defs><pattern id="bp-grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="0.6" stroke-dasharray="2 4"></path></pattern></defs>
+      <rect width="1200" height="500" fill="url(#bp-grid)"></rect>
+      <path d="M0 420 C 300 380, 600 120, 1200 60" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="1" stroke-dasharray="6 6"></path>
+      <path d="M0 470 C 350 450, 700 260, 1200 170" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1"></path>
+    </svg>
+    <div>
+      <span class="eyebrow eyebrow-badge">Affiliations and acknowledgements</span>
+      <h3>Fundamental safety research, built with Israel's universities.</h3>
+      <p>This work brings together researchers from the Technion, the INSIGHT Lab at Ben-Gurion University of the Negev and the University of Haifa. Chaim Baskin, the last author of the paper, is affiliated with Decart.ai and heads the INSIGHT Lab at Ben-Gurion University of the Negev. The code and the notebooks that generate SRI signals are released openly, so the community can reproduce the analysis and build on it.</p>
+      <div class="cta-actions">
+        <a class="btn-pill" href="https://research.decart.ai/" target="_blank" rel="noopener">Explore Decart Research</a>
+        <a class="btn-pill is-ghost" href="https://research.decart.ai/technion.html" target="_blank" rel="noopener">Technion-Decart Excellence Program</a>
+      </div>
+    </div>
+    <div class="people-card">
+      <div class="person">
+        <div class="avatar"><img src="./Step-Wise Refusal Dynamics in Autoregressive and Diffusion Language Models _ Project page_files/chaim-baskin.webp" alt="Chaim Baskin" width="64" height="64"></div>
+        <div>
+          <div class="person-name">Chaim Baskin</div>
+          <div class="person-role"><a href="https://research.decart.ai/" target="_blank" rel="noopener">Decart.ai</a>, Israel<br>Assistant Professor, Ben-Gurion University of the Negev<br>Head of the <a href="https://insight.bgu.ac.il/" target="_blank" rel="noopener">INSIGHT Lab</a></div>
+        </div>
+      </div>
+      <ul>
+        <li>Co-author of this work; contact <a href="mailto:chaimbaskin@bgu.ac.il" style="color:inherit;text-decoration:none;border-bottom:1px solid rgba(255,255,255,0.35)">chaimbaskin@bgu.ac.il</a></li>
+        <li>Co-authors from the Technion's Department of Computer Science, the INSIGHT Lab and the University of Haifa's Computer Science Department</li>
+      </ul>
+      <div class="affil-logos" aria-label="Lab logos">
+        <img src="./Step-Wise Refusal Dynamics in Autoregressive and Diffusion Language Models _ Project page_files/technion-lab.png" alt="Technion lab logo">
+        <img src="./Step-Wise Refusal Dynamics in Autoregressive and Diffusion Language Models _ Project page_files/bgu-insight-lab.png" alt="INSIGHT Lab, Ben-Gurion University logo">
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== FOOTER (Decart) ====================== -->
+<footer class="site-footer">
+  <div class="site-footer-inner container">
+    <div class="classic-footer-title">Step-Wise Refusal Dynamics in Autoregressive and Diffusion Language Models</div>
+    <div class="classic-footer-links">
+      <a href="https://arxiv.org/abs/2602.02600" target="_blank" rel="noopener">arXiv:2602.02600</a>
+      <a href="https://arxiv.org/pdf/2602.02600" target="_blank" rel="noopener">PDF</a>
+      <a href="https://github.com/ElironRahimi/sri-signal" target="_blank" rel="noopener">Code</a>
+      <a class="js-colab" href="https://colab.research.google.com/github/GabrieleSerussi/sri-project-page/blob/main/colab/sri_playground.ipynb" target="_blank" rel="noopener">Colab notebook</a>
+      <a href="https://gabrieleserussi.github.io/sri-project-page/#bibtex">BibTeX</a>
+      <a href="mailto:elironrahimi@campus.technion.ac.il">Contact</a>
+    </div>
+  </div>
+  <div class="site-footer-note">
+    <div class="container">Project page for <em>Step-Wise Refusal Dynamics in Autoregressive and Diffusion Language Models</em>. Figures 1, 2, 3, 5, 6, 7, 12, 13 and 14 are reproduced from the paper; the interactive cover is a schematic of the mechanism, not measured data. Authors: Technion, Ben-Gurion University of the Negev, University of Haifa and <a href="https://research.decart.ai/" target="_blank" rel="noopener">Decart.ai</a>.</div>
+  </div>
+</footer>
+
+<div class="chart-tip" id="chartTip" role="tooltip" aria-hidden="true"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="./Step-Wise Refusal Dynamics in Autoregressive and Diffusion Language Models _ Project page_files/main.js.download"></script>
+
+
+</body></html>
