@@ -673,7 +673,7 @@ button { font: inherit; color: inherit; }
 @media (max-width: 1200px) {
   .article-main { grid-template-columns: minmax(0, 1fr) 220px; gap: 40px; }
   .quick-links { width: 220px; }
-  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  /* .stats-grid keeps four columns here; two columns start at 1000px (rule at the end of the sheet) */
   .tool-card-body { flex-basis: 440px; }
 }
 
@@ -1034,7 +1034,7 @@ button { font: inherit; color: inherit; }
   .flow { flex-wrap: wrap; gap: 12px; }
   .flow-step { flex: 1 1 calc(50% - 6px); }
   .flow-arrow { display: none; }
-  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  /* .stats-grid keeps four columns here; two columns start at 1000px (rule at the end of the sheet) */
   .tech-cards, .rq-cards { grid-template-columns: repeat(2, 1fr); }
   .explorer-grid { grid-template-columns: 1fr; }
 }
@@ -1083,4 +1083,131 @@ button { font: inherit; color: inherit; }
   .article-body h2 { font-size: 24px; }
   .text-block { margin-bottom: 40px; }
   .tldr-side h3 { font-size: 22px; }
+}
+
+/* ---- Defenses at a glance (SVG scatter, mean over models) ---- */
+.scatter svg { display: block; width: 100%; height: auto; }
+.scatter .grid { stroke: #E3E3E3; stroke-width: 1; }
+.scatter .grid.break { stroke-dasharray: 3 4; }
+.scatter .axis { stroke: var(--neutral-300); stroke-width: 1; }
+.scatter .tick { font-family: var(--font-body); font-size: 11px; fill: var(--neutral-400); font-variant-numeric: tabular-nums; }
+.scatter .axis-title { font-family: var(--font-body); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; fill: var(--neutral-500); }
+.scatter .hit { fill: transparent; }
+.scatter .pt { stroke: var(--surface-panel); stroke-width: 2; }
+.scatter .pt.is-ours { fill: var(--series-diffusion); }
+.scatter .pt.is-base { fill: var(--series-ar); }
+.scatter .pt.is-none { fill: #fff; stroke: var(--series-ar); stroke-width: 2; }
+.scatter .lbl { font-family: var(--font-body); font-size: 12.5px; fill: var(--neutral-800); }
+.scatter .lbl.is-ours { font-weight: 600; }
+.scatter g:focus-visible .pt, .scatter g:hover .pt { filter: brightness(1.1); }
+
+/* ---- Prominent action row in the "Use it" act ---- */
+.build-actions { margin: var(--space-lg) 0 var(--space-xl); }
+.build-actions .btn-pill { font-size: 16px; padding: 13px 22px; }
+.article-body .recipe { margin: 0 0 var(--space-xl); }
+.scatter svg.is-narrow .lbl { font-size: 15px; }
+.scatter svg.is-narrow .tick { font-size: 13px; }
+.scatter svg.is-narrow .axis-title { font-size: 12px; letter-spacing: 0.04em; }
+
+/* ============================================================
+   Reading aids for the simplified structure: a muted line under each
+   section heading pointing at the paper, and spacing between the
+   overview panel and the stat cards.
+   ============================================================ */
+.article-body .section-ref { font-size: 13px; line-height: 1.5; letter-spacing: 0.01em; color: var(--neutral-500); opacity: 1; margin: -4px 0 var(--space-lg); }
+.tldr + .stats-grid { margin-top: var(--space-2xl); }
+@media (max-width: 700px) {
+  .article-body .section-ref { margin: 0 0 14px; }
+  .tldr + .stats-grid { margin-top: 16px; }
+}
+
+/* ============================================================
+   Layout fixes (2026-09-06)
+   1. Overview panel: label above the thesis heading, both left-aligned,
+      instead of a label at the far left and a heading floating right.
+   2. Header: the cover is top-aligned with the title instead of being
+      centred, so it no longer sinks when the title column is tall.
+   3. Stat cards: four columns down to 1000px, then two.
+   4. Cover: reserve only the token rows the slots need at each width.
+   ============================================================ */
+.tldr-side { flex-direction: column; align-items: flex-start; gap: var(--space-md); }
+.tldr-side h3 { max-width: 940px; flex: none; }
+.article-header { align-items: flex-start; }
+.article-hero-demo { margin-top: 54px; }
+@media (max-width: 1060px) {
+  /* stacked header: the cover spans the full column instead of a 640px box on the left */
+  .article-hero-demo { margin-top: 0; max-width: none; }
+}
+@media (max-width: 1000px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 900px) {
+  .sim-tokens { min-height: 74px; }
+}
+@media (max-width: 560px) {
+  .sim-tokens { min-height: 112px; }
+}
+@media (max-width: 420px) {
+  .sim-tokens { min-height: 150px; }
+}
+
+/* ============================================================
+   First fold: the value proposition (tagline in display type and
+   three proof points) replaces the paragraph lede.
+   ============================================================ */
+.article-dek { font-family: var(--font-display); font-size: clamp(20px, 1.65vw, 24px); font-weight: var(--w-mix-regular); line-height: 1.32; letter-spacing: -0.015em; color: var(--neutral-900); max-width: 644px; margin: 0 0 var(--space-xl); }
+.article-dek strong { font-weight: var(--w-mix-medium); }
+.value-points { list-style: none; margin: 0 0 var(--space-2xl); padding: 0; display: grid; gap: 12px; max-width: 644px; }
+.value-points li { display: grid; grid-template-columns: 78px minmax(0, 1fr); gap: 0 14px; align-items: baseline; font-family: var(--font-body); font-size: calc(16px * var(--tscale)); line-height: 1.5; letter-spacing: -0.01em; color: #333; }
+.vp-label { font-size: 11px; font-weight: 500; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent-primary); white-space: nowrap; }
+.value-points strong { color: var(--neutral-900); font-weight: 500; }
+@media (max-width: 900px) {
+  .article-dek { font-size: 21px; max-width: none; }
+  .value-points { max-width: none; }
+  .value-points li { font-size: 16.5px; line-height: 1.55; }
+}
+@media (max-width: 700px) {
+  .article-dek { font-size: 20px; margin-bottom: 18px; }
+  .value-points { gap: 10px; margin-bottom: 24px; }
+  .value-points li { font-size: 16px; grid-template-columns: 1fr; gap: 4px; }
+}
+
+/* ============================================================
+   Space utilisation across desktop, tablet and phone (2026-09-06)
+   ============================================================ */
+/* Desktop: paragraphs and lists keep a readable measure inside the wide body; charts stay full width. */
+@media (min-width: 1101px) {
+  .text-block > p, .text-block > ol, .text-block > ul { max-width: 880px; }
+}
+/* Stacked header (up to 1060px): the text uses the column instead of stopping at 75% of it. */
+@media (max-width: 1060px) {
+  .article-header-main { max-width: none; }
+  .article-dek, .value-points { max-width: 900px; }
+}
+/* Overview cards: three columns down to tablet portrait, one column only on phones. */
+@media (min-width: 761px) {
+  .tldr ul, .tldr-beats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (min-width: 761px) and (max-width: 1000px) {
+  .tldr li { padding: 16px 16px 18px; font-size: 15px; line-height: 1.5; }
+}
+/* Four-step flow: four across down to 901px, two by two on tablets, a column only on small phones. */
+@media (min-width: 901px) and (max-width: 1100px) {
+  .flow { flex-wrap: nowrap; gap: 10px; }
+  .flow-step { flex: 1 1 0; }
+  .flow-arrow { display: inline-flex; }
+}
+@media (min-width: 561px) and (max-width: 900px) {
+  .flow { flex-direction: row; flex-wrap: wrap; gap: 12px; }
+  .flow-step { flex: 1 1 calc(50% - 6px); }
+  .flow-arrow { display: none; }
+}
+/* Explorer: the two figure panes stay side by side down to 701px. */
+@media (min-width: 701px) and (max-width: 1100px) {
+  .explorer-grid { grid-template-columns: 1.5fr 1fr; }
+}
+/* Phones: less nested padding so the overview cards and stats keep their width. */
+@media (max-width: 700px) {
+  .tldr { padding: 14px; }
+  .tldr li { padding: 14px 16px 16px; }
 }

@@ -88,8 +88,8 @@
     for (var i = 0; i <= T; i++) { SRI.harmless.push(0.95 + 0.012 * Math.sin(i * 1.3)); SRI.refusal.push(0.08 + 0.008 * Math.cos(i * 0.9)); }
 
     var CAPTIONS = {
-      diffusion: '<strong>Diffusion remasking.</strong> Every step predicts all positions and commits only the positions selected by the remasking rule. Harmful predictions (dashed red) compete for commitment and in this example stay uncommitted, and once refusal tokens are committed (solid green) the rest of the response follows them. This card is a schematic of the mechanism shown in Figures 1, 2 and 12 of the paper, with harmful content redacted; the curves are illustrative and do not reproduce measured data.',
-      ar: '<strong>Autoregressive sampling.</strong> Each token is committed the moment it is generated. Once the compliance prefix is out, the harmful continuation cannot be revised, and the SRI signal never settles into the refusal zone. This is the incomplete internal recovery that the final text alone would hide. The card is a schematic and does not reproduce measured data.'
+      diffusion: '<strong>Diffusion remasking.</strong> Each step predicts every uncommitted position and commits only some. Harmful predictions (dashed red) can still be replaced, and once refusal tokens are committed (solid green) the response follows them. This is a schematic of Figures 1, 2 and 12 of the paper; the curves are illustrative and do not reproduce measured data.',
+      ar: '<strong>Autoregressive sampling.</strong> Each token is committed the moment it is generated. Once the compliant opening is out, the harmful continuation cannot be revised, and the SRI signal never settles into the refusal zone. The final text alone would hide this failed recovery. The card is a schematic and does not reproduce measured data.'
     };
 
     function stateFor(mode, step) {
@@ -299,7 +299,7 @@
     };
     var deltaNote = $('#deltaNote');
     var NOTES = {
-      rr: 'Every value is non-negative; PAIR moves least and Refusal Suppression most in refusal rate. Greedy, random, static and dynamic remasking variants all improve on AR sampling (Appendix A), and an LLM judge confirms every refusal-rate gain (Table 15).',
+      rr: 'Every value is non-negative; PAIR moves least and Refusal Suppression most in refusal rate. Greedy, random, static and dynamic remasking variants all improve on AR sampling (Appendix A), and an LLM judge also finds higher refusal rates under diffusion sampling for every attack (Table 15).',
       asr: 'Every value is non-negative; PAIR moves least and Flip Attack most in attack success. Greedy, random, static and dynamic remasking variants all improve on AR sampling (Appendix A).'
     };
     function draw(metric) {
@@ -391,18 +391,92 @@
     }), 1, [{ value: 0, label: '0' }, { value: 0.5, label: '0.5' }, { value: 1, label: '1.0' }]);
   })();
 
+  var DEFENSE_DATA = { /* Table 13, per model: rows of [overhead %, FP %, RR %, ASR %] for Undefended, PPL, Self-Examine, LlamaGuard 3, SRI Guard */
+    llada:   [[0.00, 7, 67.4, 18.4], [6.26, 9, 68.0, 18.2], [7.74, 7, 67.4, 18.4], [12.42, 7, 77.2, 14.4], [0.04, 9, 73.4, 16.8]],
+    llada15: [[0.00, 6, 59.6, 21.0], [6.18, 8, 60.2, 20.8], [8.09, 6, 80.2, 10.0], [12.27, 7, 71.6, 16.6], [0.04, 8, 70.2, 17.0]],
+    dream:   [[0.00, 4, 44.4, 9.4], [5.72, 6, 44.8, 9.4], [5.33, 4, 47.4, 8.8], [11.34, 4, 51.4, 8.6], [0.03, 6, 56.4, 7.2]],
+    qwen25:  [[0.00, 0, 11.4, 62.2], [2.40, 2, 12.0, 59.2], [3.71, 0, 11.4, 62.2], [4.76, 0, 43.2, 46.6], [0.01, 3, 47.8, 40.6]],
+    llama3:  [[0.00, 0, 23.4, 59.2], [2.36, 2, 24.0, 58.8], [4.80, 0, 30.8, 44.4], [4.67, 0, 46.6, 48.0], [0.01, 4, 55.0, 43.6]],
+    gemma:   [[0.00, 0, 46.2, 48.2], [2.65, 2, 46.8, 47.8], [5.47, 0, 53.4, 37.0], [5.26, 2, 60.4, 37.6], [0.02, 0, 54.2, 42.2]]
+  };
+
+  /* --- Defenses at a glance: means over the six models of Table 13 (web-native replacement for Figure 7) --- */
+  (function defenseMeans() {
+    var host = $('#chartDefenseMeans'), seg = $('#defenseMeansMetric'), note = $('#defenseMeansNote'); if (!host) return;
+    var NAMES = ['Undefended', 'PPL filtering', 'Self-Examine', 'LlamaGuard 3', 'SRI Guard'];
+    var models = Object.keys(DEFENSE_DATA), n = models.length;
+    var means = NAMES.map(function (name, i) {
+      var acc = [0, 0, 0, 0];
+      models.forEach(function (m) { DEFENSE_DATA[m][i].forEach(function (v, j) { acc[j] += v; }); });
+      return { name: name, overhead: acc[0] / n, fp: acc[1] / n, rr: acc[2] / n, asr: acc[3] / n, ours: i === 4, none: i === 0 };
+    });
+    var METRICS = { rr: { label: 'Refusal rate on jailbreaks (%)', short: 'refusal rate', higherBetter: true }, asr: { label: 'Attack success rate (%)', short: 'attack success rate', higherBetter: false }, fp: { label: 'False positives on harmless prompts (%)', short: 'false-positive rate', higherBetter: false } };
+    var ns = 'http://www.w3.org/2000/svg';
+    var narrowMQ = window.matchMedia ? window.matchMedia('(max-width: 700px)') : null;
+    var current = 'rr';
+    function mk(tag, attrs, text) { var e = document.createElementNS(ns, tag); for (var k in attrs) e.setAttribute(k, attrs[k]); if (text != null) e.textContent = text; return e; }
+    function fmt(v, d) { return Number(v).toFixed(d == null ? 1 : d); }
+    function draw(metric) {
+      current = metric;
+      var narrow = !!(narrowMQ && narrowMQ.matches);
+      /* geometry: a wider, flatter plot on desktop; a squarer one with larger type on phones */
+      var W = narrow ? 400 : 680, H = narrow ? 380 : 320, PL = narrow ? 46 : 56, PR = narrow ? 16 : 24, PT = 18, PB = narrow ? 64 : 58;
+      var X0 = PL, X1 = W - PR, Y0 = PT, Y1 = H - PB, XNONE = X0 + (narrow ? 20 : 26), XLOG0 = X0 + (narrow ? 56 : 70), LO = Math.log10(0.008), HI = Math.log10(20);
+      var charW = narrow ? 7.6 : 6.6, lblH = narrow ? 18 : 16;
+      function xOf(o) { return o <= 0 ? XNONE : XLOG0 + (X1 - XLOG0) * (Math.log10(o) - LO) / (HI - LO); }
+      var M = METRICS[metric], vals = means.map(function (d) { return d[metric]; });
+      var maxV = Math.max.apply(null, vals), top = maxV <= 8 ? Math.ceil(maxV * 1.25) : Math.ceil(maxV * 1.15 / 10) * 10;
+      function yOf(v) { return Y1 - (Y1 - Y0) * v / top; }
+      host.innerHTML = '';
+      var svg = mk('svg', { viewBox: '0 0 ' + W + ' ' + H, role: 'img', 'class': narrow ? 'is-narrow' : '', 'aria-label': M.label + ' of five defenses against their inference overhead, mean over six models' });
+      var steps = top <= 8 ? 2 : (top <= 40 ? 10 : 20);
+      for (var v = 0; v <= top; v += steps) { svg.appendChild(mk('line', { x1: X0, x2: X1, y1: yOf(v), y2: yOf(v), 'class': 'grid' })); svg.appendChild(mk('text', { x: X0 - 8, y: yOf(v) + 4, 'class': 'tick', 'text-anchor': 'end' }, String(v))); }
+      svg.appendChild(mk('line', { x1: X0, x2: X1, y1: Y1, y2: Y1, 'class': 'axis' }));
+      [0.01, 0.1, 1, 10].forEach(function (o) { svg.appendChild(mk('line', { x1: xOf(o), x2: xOf(o), y1: Y1, y2: Y1 + 5, 'class': 'axis' })); svg.appendChild(mk('text', { x: xOf(o), y: Y1 + 18, 'class': 'tick', 'text-anchor': 'middle' }, o + '%')); });
+      svg.appendChild(mk('text', { x: XNONE, y: Y1 + 18, 'class': 'tick', 'text-anchor': 'middle' }, 'none'));
+      svg.appendChild(mk('line', { x1: XLOG0 - 22, x2: XLOG0 - 22, y1: Y0, y2: Y1, 'class': 'grid break' }));
+      svg.appendChild(mk('text', { x: (X0 + X1) / 2, y: H - 12, 'class': 'axis-title', 'text-anchor': 'middle' }, narrow ? 'Inference overhead, log scale' : 'Inference overhead relative to base generation, log scale'));
+      svg.appendChild(mk('text', { x: 14, y: (Y0 + Y1) / 2, 'class': 'axis-title', 'text-anchor': 'middle', transform: 'rotate(-90 14 ' + ((Y0 + Y1) / 2) + ')' }, narrow ? M.short.charAt(0).toUpperCase() + M.short.slice(1) + ' (%)' : M.label));
+      var placed = [];
+      var order = means.slice().sort(function (a, b) { return xOf(a.overhead) - xOf(b.overhead); });
+      order.forEach(function (d) {
+        var cx = xOf(d.overhead), cy = yOf(d[metric]);
+        var g = mk('g', { tabindex: '0', 'data-tip': d.name + ' · ' + M.short + ' ' + fmt(d[metric]) + '% · overhead ' + (d.overhead <= 0 ? 'none' : fmt(d.overhead, 2) + '%') + ' · mean over ' + n + ' models' });
+        g.appendChild(mk('circle', { cx: cx, cy: cy, r: 16, 'class': 'hit' }));
+        g.appendChild(mk('circle', { cx: cx, cy: cy, r: narrow ? 8 : 7, 'class': 'pt ' + (d.ours ? 'is-ours' : (d.none ? 'is-none' : 'is-base')) }));
+        var label = narrow ? d.name : d.name + ' · ' + fmt(d[metric]) + '%';
+        var w = label.length * charW + 8, h = lblH;
+        var cands = [[cx + 12, cy + 5, 'start'], [cx + 12, cy - 10, 'start'], [cx + 12, cy + 20, 'start'], [cx - 12, cy + 5, 'end'], [cx, cy - 14, 'middle'], [cx, cy + 24, 'middle'], [cx - 12, cy - 10, 'end'], [cx - 12, cy + 20, 'end']];
+        var pos = cands[0];
+        for (var i = 0; i < cands.length; i++) {
+          var c = cands[i], bx = c[2] === 'start' ? c[0] : (c[2] === 'end' ? c[0] - w : c[0] - w / 2), by = c[1] - 12;
+          var clash = bx < X0 - 4 || bx + w > W - 4 || placed.some(function (b) { return !(bx + w < b.x || b.x + b.w < bx || by + h < b.y || b.y + b.h < by); });
+          if (!clash) { pos = c; placed.push({ x: bx, y: by, w: w, h: h }); break; }
+          if (i === cands.length - 1) placed.push({ x: bx, y: by, w: w, h: h });
+        }
+        g.appendChild(mk('text', { x: pos[0], y: pos[1], 'class': 'lbl' + (d.ours ? ' is-ours' : ''), 'text-anchor': pos[2] }, label));
+        svg.appendChild(g);
+      });
+      host.appendChild(svg);
+      bindTips(host);
+      var ours = means[4], base = means.slice(1, 4).reduce(function (best, d) { return best == null || (M.higherBetter ? d[metric] > best[metric] : d[metric] < best[metric]) ? d : best; }, null);
+      var cmp = M.higherBetter ? (ours[metric] >= base[metric] ? 'above' : 'below') : (ours[metric] <= base[metric] ? 'below' : 'above');
+      note.textContent = 'Mean over the six models. SRI Guard: ' + fmt(ours[metric]) + '% ' + M.short + ' at ' + fmt(ours.overhead, 2) + '% overhead, ' + cmp + ' the best compared defense on this metric, ' + base.name + ' (' + fmt(base[metric]) + '% at ' + fmt(base.overhead, 2) + '% overhead). Undefended: ' + fmt(means[0][metric]) + '%. Lower overhead is further left.';
+    }
+    seg.addEventListener('click', function (e) {
+      var b = e.target.closest('button[data-metric]'); if (!b) return;
+      $$('button', seg).forEach(function (x) { x.setAttribute('aria-selected', x === b ? 'true' : 'false'); });
+      draw(b.getAttribute('data-metric'));
+    });
+    if (narrowMQ) { var onChange = function () { draw(current); }; if (narrowMQ.addEventListener) narrowMQ.addEventListener('change', onChange); else if (narrowMQ.addListener) narrowMQ.addListener(onChange); }
+    draw('rr');
+  })();
+
   /* --- Table 13: defenses per model --- */
   (function defenses() {
     var rowsEl = $('#defenseRows'), sel = $('#defenseModel'), note = $('#defenseNote'); if (!rowsEl) return;
     var D = ['Undefended', 'PPL filtering', 'Self-Examine', 'LlamaGuard 3', 'SRI Guard'];
-    var data = { // per model: rows of [overhead %, FP %, RR %, ASR %]
-      llada:   [[0.00, 7, 67.4, 18.4], [6.26, 9, 68.0, 18.2], [7.74, 7, 67.4, 18.4], [12.42, 7, 77.2, 14.4], [0.04, 9, 73.4, 16.8]],
-      llada15: [[0.00, 6, 59.6, 21.0], [6.18, 8, 60.2, 20.8], [8.09, 6, 80.2, 10.0], [12.27, 7, 71.6, 16.6], [0.04, 8, 70.2, 17.0]],
-      dream:   [[0.00, 4, 44.4, 9.4], [5.72, 6, 44.8, 9.4], [5.33, 4, 47.4, 8.8], [11.34, 4, 51.4, 8.6], [0.03, 6, 56.4, 7.2]],
-      qwen25:  [[0.00, 0, 11.4, 62.2], [2.40, 2, 12.0, 59.2], [3.71, 0, 11.4, 62.2], [4.76, 0, 43.2, 46.6], [0.01, 3, 47.8, 40.6]],
-      llama3:  [[0.00, 0, 23.4, 59.2], [2.36, 2, 24.0, 58.8], [4.80, 0, 30.8, 44.4], [4.67, 0, 46.6, 48.0], [0.01, 4, 55.0, 43.6]],
-      gemma:   [[0.00, 0, 46.2, 48.2], [2.65, 2, 46.8, 47.8], [5.47, 0, 53.4, 37.0], [5.26, 2, 60.4, 37.6], [0.02, 0, 54.2, 42.2]]
-    };
+    var data = DEFENSE_DATA;
     var names = { llada: 'LLaDA', llada15: 'LLaDA-1.5', dream: 'Dream', qwen25: 'Qwen-2.5', llama3: 'LLaMA-3', gemma: 'Gemma' };
     var maxes = [13, 10, 100, 100], labels = ['Overhead', 'False positives', 'Jailbreak refusal', 'Attack success'];
     function fmtv(i, v) { return i === 0 ? v.toFixed(2) + '%' : (i === 1 ? v.toFixed(0) + '%' : v.toFixed(1) + '%'); }
@@ -440,9 +514,9 @@
       llama3:  { name: 'LLaMA-3', fam: 'Autoregressive', note: 'The harmless and refusal references stay flat and well separated. The jailbreak trajectory drops into the refusal region within the first few steps and then climbs back into the compliance region, an internal move toward refusal that does not complete while the text-level signal stays flat. LLaMA-3 reaches a 59.2% Attack Success Rate across jailbreaks, its Internal Recovery Rate stays near 0.1 at every threshold (Figure 5), and SRI Guard lifts its jailbreak refusal rate from 23.4% to 55.0% at 0.01% overhead (Table 13).' },
       qwen25:  { name: 'Qwen-2.5', fam: 'Autoregressive', note: 'This is the model behind Figure 2 of the paper: the harmful generation descends toward the refusal region, hovers around the 0.5 boundary between steps 5 and 13, and drifts back toward compliance while the text keeps complying. Qwen-2.5 has the highest jailbreak Attack Success Rate of the six models (62.2%); SRI Guard lowers it to 40.6% and raises the refusal rate from 11.4% to 47.8% (Table 13).' },
       gemma:   { name: 'Gemma', fam: 'Autoregressive', note: 'Gemma refuses jailbreaks about as often as Dream (46.2% against 44.4%), yet its Attack Success Rate is 48.2% against 9.4% for Dream, so a refusal rate alone does not describe robustness. Its jailbreak SRI signal dips below 0.5 in the first steps and then stays volatile inside the compliance region for the whole generation.' },
-      llada:   { name: 'LLaDA', fam: 'Diffusion', note: 'LLaDA is the primary diffusion baseline. Harmful intermediate content is revised as remasking proceeds (HRR 0.81, FRR 0.63), and its Internal Recovery Rate stays far above the autoregressive models at every threshold (Figure 5). Running the same weights with AR sampling lowers IRR by up to 0.46 (Figure 6). In this jailbreak example the signal stays between 0.4 and 0.7 for the first eighteen steps, crossing the 0.5 boundary between steps 8 and 13, before rising into the compliance region and ending near 0.8.' },
+      llada:   { name: 'LLaDA', fam: 'Diffusion', note: 'LLaDA is the primary diffusion baseline. Harmful intermediate content is revised as remasking proceeds (HRR 0.81, FRR 0.63), and its Internal Recovery Rate stays consistently above the autoregressive models at every threshold (Figure 5). Running the same weights with AR sampling lowers IRR by up to 0.46 (Figure 6). In this jailbreak example the signal stays between 0.4 and 0.7 for the first eighteen steps, crossing the 0.5 boundary between steps 8 and 13, before rising into the compliance region and ending near 0.8.' },
       llada15: { name: 'LLaDA-1.5', fam: 'Diffusion', note: 'LLaDA-1.5 is a newer LLaDA variant with the same qualitative behavior: HRR 0.92, FRR 0.65, and an aggregate jailbreak Attack Success Rate of 21.0% against 48 to 62% for the autoregressive models. Under AR sampling of the same weights, IRR falls by up to 0.48 (Figure 6). Its jailbreak trajectory hovers between 0.4 and 0.67 for the first fourteen steps and ends near 0.75, well below the flat harmless reference.' },
-      dream:   { name: 'Dream', fam: 'Diffusion', note: 'Dream is a different diffusion architecture with the strongest recovery statistics of the three (HRR 0.96, FRR 0.73) and the lowest jailbreak Attack Success Rate in the study, 9.4%. Its jailbreak trajectory hovers around the 0.5 boundary, far from the flat harmless reference, for the first sixteen steps, then rises to about 0.95 and runs alongside the harmless reference for the rest of the generation.' }
+      dream:   { name: 'Dream', fam: 'Diffusion', note: 'Dream is a different diffusion architecture with the strongest recovery statistics of the three (HRR 0.96, FRR 0.73) and the lowest jailbreak Attack Success Rate in the study, 9.4%. Its jailbreak trajectory hovers around the 0.5 boundary, well below the flat harmless reference, for the first sixteen steps, then rises to about 0.95 and runs alongside the harmless reference for the rest of the generation.' }
     };
     function show(key) {
       $$('button', tabs).forEach(function (b) { b.setAttribute('aria-selected', b.getAttribute('data-model') === key ? 'true' : 'false'); });
